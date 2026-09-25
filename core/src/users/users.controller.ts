@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard, Roles } from '../auth/auth.guard.js';
+import { AuthGuard, CurrentUser, Roles } from '../auth/auth.guard.js';
 import { CreateUserDto, UpdateUserDto } from '../auth/dto.js';
+import type { AuthUser } from '../auth/tokens.js';
 import { toProfile, type UserProfile, UsersService } from './users.service.js';
 
 @Controller('users')
@@ -8,10 +9,11 @@ import { toProfile, type UserProfile, UsersService } from './users.service.js';
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
-  // Публичные поля {id, name, role}; ?ids=a,b — только эти пользователи
+  // Публичные поля {id, name, role}; админу — ещё login, email, createdAt. ?ids=a,b — только эти пользователи
   @Get()
-  list(@Query('ids') ids?: string) {
-    return this.users.listPublic(ids ? ids.split(',').map((id) => id.trim()).filter(Boolean) : undefined);
+  list(@CurrentUser() user: AuthUser, @Query('ids') ids?: string) {
+    const only = ids ? ids.split(',').map((id) => id.trim()).filter(Boolean) : undefined;
+    return this.users.list(only, user.role === 'ADMIN');
   }
 
   // Сотрудников заводит администратор

@@ -53,11 +53,15 @@ export class UsersService {
     return user && toProfile(user);
   }
 
-  // Публичные поля — например, чтобы подписать рейтинг именами
-  async listPublic(ids?: string[]): Promise<{ items: Pick<User, 'id' | 'name' | 'role'>[]; total: number }> {
+  // Публичные поля {id, name, role} — например, чтобы подписать рейтинг именами.
+  // С full = true (для админа) — ещё login, email и createdAt
+  async list(
+    ids: string[] | undefined,
+    full: boolean,
+  ): Promise<{ items: (Pick<User, 'id' | 'name' | 'role'> & Partial<UserProfile>)[]; total: number }> {
     const items = await this.prisma.user.findMany({
       where: ids ? { id: { in: ids } } : undefined,
-      select: { id: true, name: true, role: true },
+      select: { id: true, name: true, role: true, ...(full && { login: true, email: true, createdAt: true }) },
       orderBy: { name: 'asc' },
     });
     return { items, total: items.length };
