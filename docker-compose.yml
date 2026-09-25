@@ -130,6 +130,15 @@ services:
   #   ports:
   #     - "127.0.0.1:81NN:8080"   # отладка: http://127.0.0.1:81NN/health
 
+  tpl_py:
+    <<: *module
+    build: ./modules/tpl_py
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://tpl_py_svc:module_pass@postgres:5432/app
+      REDIS_URL: redis://:redis_pass@redis:6379
+    ports:
+      - "127.0.0.1:8102:8080"
 volumes:
   pgdata:
   redisdata:
