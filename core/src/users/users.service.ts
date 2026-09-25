@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { hashPassword } from '../auth/password.js';
 import { ApiError } from '../common/api-error.js';
+import { EventsService } from '../events/events.service.js';
 import type { Role, User } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -38,7 +39,10 @@ export function toProfile(user: User): UserProfile {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventsService,
+  ) {}
 
   findByLogin(login: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { login: normalize(login) } });
@@ -63,9 +67,12 @@ export class UsersService {
     const login = normalize(data.login);
     const email = data.email ? normalize(data.email) : null;
     await this.ensureFree(login, email);
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: { login, email, name: data.name.trim(), role: data.role, passwordHash: await hashPassword(data.password) },
     });
+    // Модули могут держать у себя копию имён — например, для рейтинга
+    await this.events.publish('user.created', { id: user.id, name: user.name, role: user.role });
+    return user;
   }
 
   async update(id: string, changes: UserChanges): Promise<UserProfile> {
@@ -84,6 +91,7 @@ export class UsersService {
         passwordHash: changes.password ? await hashPassword(changes.password) : undefined,
       },
     });
+    await this.events.publish('user.updated', { id: updated.id, name: updated.name, role: updated.role });
     return toProfile(updated);
   }
 

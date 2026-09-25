@@ -1,5 +1,6 @@
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { lookup } from 'node:dns/promises';
+import { Subject } from 'rxjs';
 import { config, moduleUrl } from '../config.js';
 
 export type ModuleStatus = 'up' | 'down';
@@ -19,6 +20,9 @@ const FAILURES_TO_DOWN = 2;
 // Реестр модулей: опрашивает /health каждого модуля и помнит, кто жив
 @Injectable()
 export class ModulesRegistry implements OnModuleInit, OnModuleDestroy {
+  // Смена статуса модуля — уходит в SSE, фронт сразу скрывает или показывает блок
+  readonly changes = new Subject<{ name: string; status: ModuleStatus }>();
+
   private readonly logger = new Logger(ModulesRegistry.name);
   private readonly states = new Map<string, ModuleState>();
   private timer?: NodeJS.Timeout;
@@ -88,6 +92,7 @@ export class ModulesRegistry implements OnModuleInit, OnModuleDestroy {
     if (state.status === status) return;
     this.logger.log(`модуль ${state.name}: ${state.status} → ${status}`);
     state.status = status;
+    this.changes.next({ name: state.name, status });
   }
 }
 

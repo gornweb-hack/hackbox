@@ -19,6 +19,13 @@ export const config = {
   moduleTimeoutMs: Number(env.MODULE_TIMEOUT_MS ?? 10_000),
   healthIntervalMs: 5_000,
   healthTimeoutMs: 1_000,
+  events: {
+    redisUrl: env.REDIS_URL ?? 'redis://localhost:6379',
+    // Через сколько миллисекунд необработанное событие забирается на повтор
+    retryMs: Number(env.EVENTS_RETRY_MS ?? 30_000),
+    // После стольких попыток событие уходит в events:dlq
+    maxAttempts: 5,
+  },
   auth: {
     jwtSecret: env.JWT_SECRET ?? 'dev-secret-change-me',
     // Формат jsonwebtoken: 15m, 2h, 1d или число секунд

@@ -14,7 +14,7 @@ docker compose up -d --build
 
 Ядро отвечает на `http://127.0.0.1:4000/api/health`.
 
-Файл `.env` не нужен. Если порт 5432 или 4000 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT` или `CORE_PORT`.
+Файл `.env` не нужен. Если порт 5432, 4000 или 6379 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT`, `CORE_PORT` или `REDIS_PORT`.
 
 В `docker compose ps -a` сервис `db-init` показывает `Exited (0)`. Так и должно быть: он создаёт роли и схемы и завершается. Если он упал, смотрите `docker compose logs db-init`. Флаг `--wait` не используйте: Compose считает завершение `db-init` ошибкой.
 
@@ -24,7 +24,7 @@ docker compose up -d --build
 
 | Эндпоинт | Что делает |
 |---|---|
-| `GET /api/health` | `200 {"status":"ok"}`, если ядро видит базу, иначе `503 DB_UNAVAILABLE` |
+| `GET /api/health` | `200 {"status":"ok","db":"up","redis":"up"}`, если ядро видит базу, иначе `503 DB_UNAVAILABLE`. Лежащий Redis даёт `"redis":"down"`, но ответ остаётся 200: без Redis ядро работает, только события не ходят |
 | `GET /api/modules` | статусы модулей: `[{"name":"tpl_go","status":"up","checkedAt":"…"}]`, опрос `/health` каждые 5 с |
 | `ALL /api/m/<name>/<путь>` | прокси в модуль на `/<путь>` |
 
@@ -59,11 +59,40 @@ docker compose up -d --build
 
 Памятка фронту:
 - `401 TOKEN_EXPIRED` → вызвать `POST /api/auth/refresh` и повторить запрос;
-- `401 REFRESH_INVALID` или `TOKEN_INVALID` → отправить на страницу входа.
+- `401 REFRESH_INVALID` или `TOKEN_INVALID` → отправить на страницу входа;
+- `EventSource` (`/api/stream`) оборвался → вызвать refresh и переподключиться: статус ответа `EventSource` не показывает.
 
 На демо `ACCESS_TTL` можно поднять, например, до `8h`. Настройки входа лежат в `docker-compose.yml` у сервиса `core`.
 
 Модули получают пользователя в заголовках `X-User-Id` и `X-User-Role`, см. [контракт](docs/module-contract.md).
+
+## События и уведомления
+
+Модули обмениваются событиями через Redis Streams: один стрим `events`, у каждого модуля своя группа чтения. Формат и правила — в [контракте](docs/module-contract.md#события-если-модулю-они-нужны).
+
+**Уведомления в браузер** — `GET /api/stream` (SSE, только для вошедших, в браузере по cookie). В поток приходят:
+- события, адресованные пользователю (`userId`), и события для всех (`broadcast: true`). В `data` лежит конверт события;
+- `{"type":"module.status","data":{"name":"points","status":"down"}}`, когда модуль падает или поднимается, — фронт сразу скрывает или показывает блок;
+- именованное событие `ping` раз в 25 с, чтобы соединение не рвалось. Обработчик `onmessage` его не получает.
+
+Чтобы показать сотруднику уведомление, любой модуль публикует `notification.requested` с его `userId`.
+
+**Если Redis лежит,** вход, пользователи и прокси работают, события просто не отправляются (предупреждение в логе ядра). Когда Redis возвращается, ядро переподключается само.
+
+**Отладка:**
+```bash
+docker compose exec redis redis-cli -a redis_pass --no-auth-warning XRANGE events - +
+```
+```bash
+docker compose exec redis redis-cli -a redis_pass --no-auth-warning XINFO GROUPS events
+```
+```bash
+docker compose exec redis redis-cli -a redis_pass --no-auth-warning XPENDING events core
+```
+```bash
+docker compose exec redis redis-cli -a redis_pass --no-auth-warning XRANGE events:dlq - +
+```
+По порядку: последние события; группы и их отставание (`lag`); неподтверждённые события группы; события, которые не удалось обработать за 5 попыток.
 
 ## База данных
 
