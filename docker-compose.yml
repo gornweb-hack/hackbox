@@ -1,0 +1,47 @@
+# Настройки для разработки и демо. Порт базы открыт только на localhost,
+# поэтому простые пароли допустимы. Локально через .env меняется только POSTGRES_PORT.
+x-db-env: &db-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: app
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    # Запас соединений: пулы ORM растут с числом ядер, 100 по умолчанию может не хватить
+    command: ["postgres", "-c", "max_connections=300"]
+    environment:
+      <<: *db-env
+      # Сортировка по-русски (ICU). Применяется только при создании базы
+      POSTGRES_INITDB_ARGS: "--locale-provider=icu --icu-locale=ru-RU"
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # По TCP: через сокет база отвечает «готова» ещё во время инициализации
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Роли и схемы. Отрабатывает при каждом `up` и завершается: Exited (0) — это норма
+  db-init:
+    image: postgres:17-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *db-env
+      CORE_DB_PASSWORD: core_pass
+      MODULE_DB_PASSWORD: module_pass
+      # Модули через запятую: для каждого создаются схема <name> и роль <name>_svc
+      DB_MODULES: tpl_go,tpl_py
+    volumes:
+      - ./infra/postgres/bootstrap.sh:/bootstrap.sh:ro
+    entrypoint: ["bash", "/bootstrap.sh"]
+    restart: "no"
+
+volumes:
+  pgdata:
