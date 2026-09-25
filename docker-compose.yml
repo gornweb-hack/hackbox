@@ -119,16 +119,15 @@ services:
     ports:
       - "127.0.0.1:${WEB_PORT:-3000}:3000"
 
-  # Модуль: раскомментируйте, замените <name> и порт 81NN (docs/module-contract.md)
-  # <name>:
-  #   <<: *module
-  #   build: ./modules/<name>
-  #   environment:
-  #     PORT: "8080"
-  #     DATABASE_URL: postgres://<name>_svc:module_pass@postgres:5432/app
-  #     REDIS_URL: redis://:redis_pass@redis:6379
-  #   ports:
-  #     - "127.0.0.1:81NN:8080"   # отладка: http://127.0.0.1:81NN/health
+  tpl_go:
+    <<: *module
+    build: ./modules/tpl_go
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://tpl_go_svc:module_pass@postgres:5432/app
+      REDIS_URL: redis://:redis_pass@redis:6379
+    ports:
+      - "127.0.0.1:8101:8080"
 
   tpl_py:
     <<: *module
