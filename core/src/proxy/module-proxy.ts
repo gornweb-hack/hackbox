@@ -1,5 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { AUTH_FAILURES, type TokensService } from '../auth/tokens.js';
 import { sendError } from '../common/api-error.js';
 import { config } from '../config.js';
 import type { ModulesRegistry } from '../modules-registry/modules-registry.service.js';
@@ -12,7 +13,7 @@ const UNREACHABLE = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'EHOSTUNR
 
 // Прокси /api/m/<name>/<путь> → http://<name>:8080/<путь>. Монтируется на /api/m,
 // поэтому req.url здесь начинается с /<name>
-export function createModuleProxy(registry: ModulesRegistry): RequestHandler {
+export function createModuleProxy(registry: ModulesRegistry, tokens: TokensService): RequestHandler {
   const proxies = new Map<string, RequestHandler>();
 
   for (const { name } of registry.list()) {
@@ -57,9 +58,21 @@ export function createModuleProxy(registry: ModulesRegistry): RequestHandler {
       sendError(res, 503, 'MODULE_UNAVAILABLE', `Модуль «${name}» недоступен`);
       return;
     }
-    // Пользователя модулю передаёт только ядро (шаг «вход»), клиент подделать не может
+    // Пользователя модулю передаёт только ядро, клиент подделать не может
     for (const header of Object.keys(req.headers)) {
       if (header.startsWith('x-user-')) delete req.headers[header];
+    }
+    // Без токена запрос уходит анонимно — модуль сам решает, нужен ли ему пользователь.
+    // Токен без обращения к базе: прокси работает, даже когда база лежит
+    const check = tokens.check(req);
+    if (check.status === 'expired' || check.status === 'invalid') {
+      const failure = AUTH_FAILURES[check.status];
+      sendError(res, 401, failure.code, failure.message);
+      return;
+    }
+    if (check.status === 'valid') {
+      req.headers['x-user-id'] = check.user.id;
+      req.headers['x-user-role'] = check.user.role;
     }
     void proxy(req, res, next);
   };

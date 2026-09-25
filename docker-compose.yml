@@ -64,6 +64,16 @@ services:
       PORT: "4000"
       DATABASE_URL: postgres://core_svc:core_pass@postgres:5432/app
       MODULES: *modules
+      # Вход пользователей. Для демо ACCESS_TTL можно поднять, например, до 8h
+      JWT_SECRET: dev-secret-change-me
+      ACCESS_TTL: 15m
+      REFRESH_TTL_DAYS: "30"
+      # Самостоятельная регистрация; по умолчанию аккаунты заводит админ
+      REGISTRATION_OPEN: "false"
+      ADMIN_LOGIN: admin
+      ADMIN_PASSWORD: admin123
+      # Демо-аккаунты manager/manager123 и user/user123
+      SEED_DEMO_USERS: "true"
     ports:
       - "127.0.0.1:${CORE_PORT:-4000}:4000"
     healthcheck:

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { type ApiErrorBody, sendError } from './api-error.js';
+import { isDatabaseDown } from './db-errors.js';
 
 // Приводит любую ошибку ядра к формату контракта {code, message}
 @Catch()
@@ -25,6 +26,13 @@ export class ErrorFilter implements ExceptionFilter {
       } else {
         sendError(res, status, HttpStatus[status] ?? 'ERROR', exception.message);
       }
+      return;
+    }
+
+    // База лежит — не «внутренняя ошибка», а временная недоступность: фронт покажет понятное сообщение
+    if (isDatabaseDown(exception)) {
+      this.logger.warn(`база недоступна: ${exception instanceof Error ? exception.message : String(exception)}`);
+      sendError(res, 503, 'DB_UNAVAILABLE', 'База данных недоступна, попробуйте через минуту');
       return;
     }
 

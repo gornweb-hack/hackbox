@@ -30,6 +30,41 @@ docker compose up -d --build
 
 Ошибки прокси: `404 MODULE_NOT_FOUND` — модуля нет в списке, `503 MODULE_UNAVAILABLE` — модуль лежит (ответ сразу, без ожидания), `504 MODULE_TIMEOUT` — модуль не ответил за 10 с.
 
+Если база лежит, эндпоинты, которым она нужна, отвечают `503 DB_UNAVAILABLE`. Прокси в модули при этом продолжает работать.
+
+## Вход
+
+Вход по логину: табельный номер, телефон или email, без учёта регистра. Роли: `USER`, `MANAGER`, `ADMIN`.
+
+| Демо-аккаунт | Пароль | Роль |
+|---|---|---|
+| `admin` | `admin123` | `ADMIN` |
+| `manager` | `manager123` | `MANAGER` |
+| `user` | `user123` | `USER` |
+
+| Эндпоинт | Кто | Что делает |
+|---|---|---|
+| `POST /api/auth/login` `{login, password}` | все | `{user, accessToken, refreshToken}` и cookie |
+| `POST /api/auth/refresh` | все | новая пара токенов по cookie или `{refreshToken}` |
+| `POST /api/auth/logout` | все | отзывает refresh-токен, стирает cookie |
+| `GET /api/auth/me` | вошедший | профиль |
+| `POST /api/auth/register` `{login, password, name, email?}` | все, если `REGISTRATION_OPEN=true` | регистрация с ролью `USER` |
+| `GET /api/users?ids=a,b` | вошедший | публичные `{id, name, role}`, например для рейтинга |
+| `POST /api/users`, `PATCH /api/users/:id` | `ADMIN` | завести сотрудника, изменить имя, email, роль или пароль |
+
+Токены:
+- access-токен (JWT) живёт `ACCESS_TTL`, по умолчанию 15 минут, и проверяется без базы;
+- refresh-токен живёт 30 дней. При обновлении выдаётся новый, старый ещё 30 секунд принимается, чтобы две вкладки не выкидывали пользователя;
+- браузеру хватает cookie `hb_access` и `hb_refresh` (httpOnly), остальные клиенты передают `Authorization: Bearer <accessToken>`.
+
+Памятка фронту:
+- `401 TOKEN_EXPIRED` → вызвать `POST /api/auth/refresh` и повторить запрос;
+- `401 REFRESH_INVALID` или `TOKEN_INVALID` → отправить на страницу входа.
+
+На демо `ACCESS_TTL` можно поднять, например, до `8h`. Настройки входа лежат в `docker-compose.yml` у сервиса `core`.
+
+Модули получают пользователя в заголовках `X-User-Id` и `X-User-Role`, см. [контракт](docs/module-contract.md).
+
 ## База данных
 
 Один Postgres, у каждого сервиса своя схема и своя роль. Роль модуля видит только свою схему, чужие данные берутся через API или события.
