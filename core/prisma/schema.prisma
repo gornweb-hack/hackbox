@@ -1,0 +1,14 @@
+// Схема ядра (public). Модели появятся в шаге «вход пользователей».
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  // Явно: иначе Prisma угадывает по tsconfig, а в Docker его нет на момент генерации
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

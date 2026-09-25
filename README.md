@@ -9,12 +9,26 @@ Polyglot hackathon starter: Nest.js core with pluggable Go and Python modules, N
 ## Быстрый старт
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-Файл `.env` не нужен. Если порт 5432 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT`.
+Ядро отвечает на `http://127.0.0.1:4000/api/health`.
+
+Файл `.env` не нужен. Если порт 5432 или 4000 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT` или `CORE_PORT`.
 
 В `docker compose ps -a` сервис `db-init` показывает `Exited (0)`. Так и должно быть: он создаёт роли и схемы и завершается. Если он упал, смотрите `docker compose logs db-init`. Флаг `--wait` не используйте: Compose считает завершение `db-init` ошибкой.
+
+## Ядро
+
+Ядро на Nest.js ([core/](core/README.md)) — единственная точка входа для фронта. От модулей оно не зависит: если модуль лежит, ядро работает дальше и сразу отвечает понятной ошибкой.
+
+| Эндпоинт | Что делает |
+|---|---|
+| `GET /api/health` | `200 {"status":"ok"}`, если ядро видит базу, иначе `503 DB_UNAVAILABLE` |
+| `GET /api/modules` | статусы модулей: `[{"name":"tpl_go","status":"up","checkedAt":"…"}]`, опрос `/health` каждые 5 с |
+| `ALL /api/m/<name>/<путь>` | прокси в модуль на `/<путь>` |
+
+Ошибки прокси: `404 MODULE_NOT_FOUND` — модуля нет в списке, `503 MODULE_UNAVAILABLE` — модуль лежит (ответ сразу, без ожидания), `504 MODULE_TIMEOUT` — модуль не ответил за 10 с.
 
 ## База данных
 
@@ -26,11 +40,6 @@ docker compose up -d
 | модуль `<name>` | `<name>` | `<name>_svc` | `module_pass` |
 
 Строка подключения: `postgres://<роль>:<пароль>@localhost:5432/app`. Из контейнеров вместо `localhost` — `postgres`.
-
-### Как добавить модуль
-
-1. Допишите имя в `DB_MODULES` в [docker-compose.yml](docker-compose.yml). Имя: `^[a-z][a-z0-9_]*$`, нельзя `core`, `public`, `pg`, `pg_*`.
-2. Выполните `docker compose up -d`. `db-init` создаст схему и роль, данные остальных сервисов не трогаются.
 
 ### Снимок базы перед демо
 
@@ -49,6 +58,18 @@ docker compose exec postgres pg_restore -U postgres -d app --clean --if-exists d
 ### Полный сброс
 
 `docker compose down -v` удаляет все данные. Он нужен, только если поменялись параметры создания базы, например `POSTGRES_INITDB_ARGS`.
+
+## Модули
+
+Что обязан уметь каждый модуль, описано в [контракте модуля](docs/module-contract.md).
+
+Как подключить модуль:
+
+1. Допишите имя в `x-modules` в начале [docker-compose.yml](docker-compose.yml): этот список читают и база, и ядро. Имя: `^[a-z][a-z0-9_]*$`, нельзя `core`, `public`, `pg`, `pg_*`.
+2. Создайте папку `modules/<name>/` с `Dockerfile` по контракту.
+3. В `docker-compose.yml` раскомментируйте пример блока модуля в конце `services:`, подставьте имя и порт для отладки из таблицы в контракте.
+4. Выполните `docker compose up -d --build`. `db-init` создаст схему и роль, данные остальных сервисов не трогаются. Модуль стартует после `db-init`.
+5. Откройте `http://127.0.0.1:81NN/health`, должен вернуться `200`. Через 5 секунд модуль появится в `http://127.0.0.1:4000/api/modules` со статусом `up` и станет доступен через ядро: `http://127.0.0.1:4000/api/m/<name>/...`.
 
 ## Лицензия
 
