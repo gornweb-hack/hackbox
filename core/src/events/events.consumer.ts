@@ -19,9 +19,8 @@ export function entriesOf(reply: unknown): StreamEntry[] {
   return Array.isArray(pair[1]) ? (pair[1] as StreamEntry[]) : [];
 }
 
-// Читатель событий ядра (группа core). Это же образец алгоритма для хелперов Go и Python:
-// XREADGROUP → обработка → XACK; упавшие события — повтор через XPENDING + XCLAIM,
-// после maxAttempts попыток — в events:dlq
+// Читатель событий ядра (группа core): XREADGROUP → обработка → XACK;
+// упавшие события — повтор через XPENDING + XCLAIM, после maxAttempts попыток — в events:dlq
 @Injectable()
 export class EventsConsumer implements OnApplicationBootstrap, OnModuleDestroy {
   // Сюда попадают события для пользователей — их раздаёт SSE

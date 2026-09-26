@@ -10,8 +10,6 @@ import { EventsConsumer } from './events/events.consumer.js';
 import { EventsService } from './events/events.service.js';
 import { StreamController } from './events/stream.controller.js';
 import { HealthController } from './health/health.controller.js';
-import { ModulesController } from './modules-registry/modules.controller.js';
-import { ModulesRegistry } from './modules-registry/modules-registry.service.js';
 import { PrismaService } from './prisma/prisma.service.js';
 import { UsersController } from './users/users.controller.js';
 import { UsersService } from './users/users.service.js';
@@ -23,10 +21,9 @@ import { UsersService } from './users/users.service.js';
       signOptions: { expiresIn: config.auth.accessTtl as JwtSignOptions['expiresIn'] },
     }),
   ],
-  controllers: [HealthController, ModulesController, AuthController, UsersController, StreamController],
+  controllers: [HealthController, AuthController, UsersController, StreamController],
   providers: [
     PrismaService,
-    ModulesRegistry,
     TokensService,
     AuthGuard,
     AuthService,
