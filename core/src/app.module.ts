@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { EventsModule } from './events/events.module.js';
 import { GamificationModule } from './gamification/gamification.module.js';
@@ -8,6 +9,6 @@ import { ScenariosModule } from './scenarios/scenarios.module.js';
 
 // Приложение собирается из модулей; новый модуль подключается строкой в imports
 @Module({
-  imports: [PrismaModule, EventsModule, AuthModule, HealthModule, ScenariosModule, GamificationModule],
+  imports: [PrismaModule, EventsModule, AuthModule, HealthModule, ScenariosModule, GamificationModule, AnalyticsModule],
 })
 export class AppModule {}
