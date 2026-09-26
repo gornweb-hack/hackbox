@@ -1,36 +1,11 @@
 import { Module } from '@nestjs/common';
-import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
-import { AuthController } from './auth/auth.controller.js';
-import { AuthGuard } from './auth/auth.guard.js';
-import { AuthService } from './auth/auth.service.js';
-import { SeedService } from './auth/seed.js';
-import { TokensService } from './auth/tokens.js';
-import { config } from './config.js';
-import { EventsConsumer } from './events/events.consumer.js';
-import { EventsService } from './events/events.service.js';
-import { StreamController } from './events/stream.controller.js';
-import { HealthController } from './health/health.controller.js';
-import { PrismaService } from './prisma/prisma.service.js';
-import { UsersController } from './users/users.controller.js';
-import { UsersService } from './users/users.service.js';
+import { AuthModule } from './auth/auth.module.js';
+import { EventsModule } from './events/events.module.js';
+import { HealthModule } from './health/health.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
+// Приложение собирается из модулей; новый модуль подключается строкой в imports
 @Module({
-  imports: [
-    JwtModule.register({
-      secret: config.auth.jwtSecret,
-      signOptions: { expiresIn: config.auth.accessTtl as JwtSignOptions['expiresIn'] },
-    }),
-  ],
-  controllers: [HealthController, AuthController, UsersController, StreamController],
-  providers: [
-    PrismaService,
-    TokensService,
-    AuthGuard,
-    AuthService,
-    UsersService,
-    SeedService,
-    EventsService,
-    EventsConsumer,
-  ],
+  imports: [PrismaModule, EventsModule, AuthModule, HealthModule],
 })
 export class AppModule {}

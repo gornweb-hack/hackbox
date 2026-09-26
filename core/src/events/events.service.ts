@@ -9,7 +9,7 @@ import {
 import { createRedis } from './redis.js';
 
 // Публикация событий ядра. «Лучшее усилие»: если Redis лежит, событие теряется
-// с предупреждением в логе, а вход, пользователи и прокси продолжают работать
+// с предупреждением в логе, а вход и сотрудники продолжают работать
 @Injectable()
 export class EventsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EventsService.name);
