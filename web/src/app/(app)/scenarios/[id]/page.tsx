@@ -4,6 +4,7 @@ import { PlayIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CarScene } from "@/components/run/car-scene";
 import { ScenarioTags } from "@/components/scenario-tags";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +53,9 @@ export default function ScenarioPage() {
         </div>
         <ScenarioTags scenario={scenario} tone="dark" withCategory={false} />
       </section>
+
+      {/* Пока человек читает, как устроен сценарий, проводник катит тележку по вагону */}
+      <CarScene walkMs={9000} />
 
       <section className="flex flex-col gap-2 rounded-xl border bg-card p-5 text-[15px] leading-[1.5] shadow-card">
         <h2 className="text-base font-semibold tracking-[-0.01em]">Как это устроено</h2>

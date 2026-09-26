@@ -50,6 +50,33 @@
   --shadow-card-hover: 0 2px 4px rgb(16 18 22 / 0.05), 0 18px 34px -16px rgb(16 18 22 / 0.2);
 }
 
+/* Анимации сцены вагона в плеере: проводник идёт с тележкой, пейзаж летит за окном.
+   Включаются через motion-safe:, чтобы уважать «уменьшить движение» в системе */
+@theme {
+  --animate-car-walk: car-walk var(--walk-ms, 3500ms) ease-out both;
+  --animate-car-bob: car-bob 0.38s ease-in-out infinite alternate;
+  --animate-car-speed: car-speed 0.9s linear infinite;
+
+  @keyframes car-walk {
+    from {
+      transform: translateX(-190px);
+    }
+  }
+  @keyframes car-bob {
+    to {
+      transform: translateY(-1.8px);
+    }
+  }
+  @keyframes car-speed {
+    from {
+      transform: translateX(40px);
+    }
+    to {
+      transform: translateX(-60px);
+    }
+  }
+}
+
 /* Токены дизайна «Рейс 400». Только светлая тема.
    Красный, жёлтый и зелёный — только для зон шкал репутации, остальные акценты — primary */
 :root {
