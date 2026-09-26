@@ -11,6 +11,7 @@ const rules: Rules = {
   ],
   xp: { good: 150, ok: 100, bad: 50 },
   reputation: { window: 2 },
+  achievements: [],
 };
 
 describe('опыт и уровень', () => {

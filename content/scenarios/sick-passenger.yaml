@@ -21,6 +21,7 @@ nodes:
       to: worse
     choices:
       - id: call-chief
+        skills: [acknowledge, safety]
         text: >-
           Подойти: «Я рядом, сейчас приглашу начальника поезда и организуем помощь» — и вызвать
           начальника по рации
@@ -50,6 +51,7 @@ nodes:
       телефон.
     choices:
       - id: chief-now
+        skills: [safety]
         text: Срочно вызвать начальника поезда по рации и остаться рядом с пассажиром
         effects: {loyalty: 10, safety: 15}
         review: >-
@@ -68,6 +70,7 @@ nodes:
           медики — вызывайте их немедленно.
         to: bad-end
       - id: ask-neighbours
+        skills: [solution]
         text: Спросить у соседей, нет ли среди них врача
         effects: {loyalty: 5, safety: 5}
         review: >-
@@ -81,6 +84,7 @@ nodes:
       медиков. Соседи нервничают, одна пассажирка на грани паники.
     choices:
       - id: announce-calm
+        skills: [safety]
         text: >-
           Спокойно объявить: «Уважаемые пассажиры, если среди вас есть медицинский работник,
           просим подойти в третий вагон»
@@ -110,6 +114,7 @@ nodes:
       к ближайшей станции. Пассажир спрашивает вас: «Со мной всё будет хорошо?»
     choices:
       - id: reassure
+        skills: [reassure]
         text: «Я рядом. Врач с вами, а на станции вас встретит бригада скорой помощи»
         effects: {loyalty: 15, safety: 5}
         review: >-
@@ -141,6 +146,7 @@ nodes:
       10 минут. Пассажиру по-прежнему плохо.
     choices:
       - id: stay-close
+        skills: [safety, reassure]
         text: Остаться рядом, следить за состоянием и заранее подготовить выход к бригаде скорой
         effects: {loyalty: 10, safety: 15}
         review: >-

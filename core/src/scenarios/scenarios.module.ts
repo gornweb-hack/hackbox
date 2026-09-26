@@ -5,9 +5,11 @@ import { RunsService } from './runs.service.js';
 import { ScenariosController } from './scenarios.controller.js';
 import { ScenariosService } from './scenarios.service.js';
 
-// Сценарии тренажёра: каталог из content/scenarios, прохождения с таймером и двумя шкалами, демо-история
+// Сценарии тренажёра: каталог из content/scenarios, прохождения с таймером и двумя шкалами, демо-история.
+// Каталог и прохождения открыты аналитике для чтения: навыки считаются по решениям и меткам в YAML
 @Module({
   controllers: [ScenariosController, RunsController],
   providers: [ScenariosService, RunsService, DemoHistoryService],
+  exports: [ScenariosService, RunsService],
 })
 export class ScenariosModule {}

@@ -92,6 +92,16 @@ export class RunsService {
     return new Set(runs.map((run) => run.scenarioId));
   }
 
+  // Последние завершённые прохождения с решениями — для аналитики навыков, новые первыми
+  recentFinished(userId: string, limit: number): Promise<RunWithDecisions[]> {
+    return this.prisma.scenarioRun.findMany({
+      where: { userId, finishedAt: { not: null } },
+      orderBy: { finishedAt: 'desc' },
+      take: limit,
+      include: withDecisions,
+    });
+  }
+
   // Чужое прохождение отвечает так же, как несуществующее: не выдаём, что оно есть
   private async load(userId: string, runId: string): Promise<RunWithDecisions> {
     const run = await this.prisma.scenarioRun.findUnique({ where: { id: runId }, include: withDecisions });

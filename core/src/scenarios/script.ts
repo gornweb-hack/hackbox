@@ -20,6 +20,8 @@ export interface Choice {
   effects: Partial<Scales>;
   review: string;
   to: Branch[];
+  // Навыки ролевой модели, которые показывает этот вариант (content/skills.yaml): так узел проверяет навык
+  skills: string[];
 }
 
 export interface Timeout {
@@ -64,6 +66,15 @@ function parseEffects(value: unknown, where: string): Partial<Scales> {
     effects[scale as ScaleName] = delta;
   }
   return effects;
+}
+
+// skills — список id навыков; их наличие в content/skills.yaml проверяет analytics/content.spec.ts
+function parseSkills(value: unknown, where: string): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || !value.every((skill) => typeof skill === 'string' && skill.trim())) {
+    throw new Error(`${where}: skills — это список навыков [acknowledge, safety]`);
+  }
+  return value.map((skill: string) => skill.trim());
 }
 
 function parseCondition(value: unknown, where: string): Condition {
@@ -113,6 +124,7 @@ function parseNode(raw: Fields, where: string): ScenarioNode {
       effects: parseEffects(item.effects, at),
       review: requireText(item, 'review', at),
       to: parseTransition(item.to, at),
+      skills: parseSkills(item.skills, at),
     };
   });
   const ids = choices.map((choice) => choice.id);
