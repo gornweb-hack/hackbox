@@ -7,13 +7,19 @@ import { NewScenarioBanner } from "@/components/home/new-scenario-banner";
 import { RatingCard } from "@/components/home/rating-card";
 import { ReputationCard } from "@/components/home/reputation-card";
 import { ScenariosCard } from "@/components/home/scenarios-card";
+import { SkillsCard } from "@/components/home/skills-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { trainingOf, useSkills } from "@/lib/analytics";
 import { useScenarios } from "@/lib/scenarios";
 
 // Главная — табло прогресса и вход в следующую тренировку. Сетка 6 колонок на десктопе, как в макете:
-// главная карточка (4) и уровень (2), ниже репутация (2) и рейтинг (2), затем сценарии (3) и ачивки (3). У каждой карточки свои загрузка и ошибка
+// главная карточка (4) и уровень (2), ниже репутация, рейтинг и навыки (по 2), затем сценарии (3) и ачивки (3). У каждой карточки свои загрузка и ошибка
 export default function HomePage() {
-  const { data: scenarios, isPending, isError } = useScenarios();
+  const { data: scenarios, isPending: scenariosPending, isError } = useScenarios();
+  // Навыки выбирают сценарий для главной карточки; ждём их, чтобы карточка не сменилась на глазах.
+  // Если аналитика недоступна, карточка предлагает следующий непройденный сценарий
+  const skills = useSkills();
+  const isPending = scenariosPending || skills.isPending;
   // Плашка — только про новый сценарий, который ещё не пройден
   const fresh = scenarios?.find((scenario) => scenario.isNew && !scenario.completed);
 
@@ -32,13 +38,14 @@ export default function HomePage() {
         ) : (
           <>
             {fresh && <NewScenarioBanner scenario={fresh} />}
-            <HeroCard scenarios={scenarios} />
+            <HeroCard scenarios={scenarios} training={trainingOf(skills.data)} />
           </>
         )}
       </div>
       <LevelCard className="lg:col-span-2" />
       <ReputationCard className="lg:col-span-2" />
       <RatingCard className="lg:col-span-2" />
+      <SkillsCard className="lg:col-span-2" />
       {scenarios && scenarios.length > 0 && <ScenariosCard scenarios={scenarios} className="lg:col-span-3" />}
       <AchievementsCard className="lg:col-span-3" />
     </div>

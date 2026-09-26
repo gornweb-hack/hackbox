@@ -34,6 +34,22 @@ describe("heroState", () => {
     expect(state).toEqual({ kind: "next", scenario: scenario("b", "x") });
   });
 
+  it("есть слабый навык — сценарий на него, даже если есть непройденные", () => {
+    const skill = { id: "safety", title: "Безопасность", value: 54, hits: 7, tests: 13 };
+    const state = heroState([scenario("a", "x", true), scenario("b", "x")], { scenarioId: "a", skill });
+    expect(state).toEqual({ kind: "training", scenario: scenario("a", "x", true), skill });
+  });
+
+  it("новичку — первый сценарий, даже при рекомендации", () => {
+    const skill = { id: "safety", title: "Безопасность", value: null, hits: 0, tests: 0 };
+    expect(heroState([scenario("a", "x"), scenario("b", "x")], { scenarioId: "b", skill })?.kind).toBe("first");
+  });
+
+  it("рекомендованного сценария нет в каталоге — следующий непройденный", () => {
+    const skill = { id: "safety", title: "Безопасность", value: 54, hits: 7, tests: 13 };
+    expect(heroState([scenario("a", "x", true), scenario("b", "x")], { scenarioId: "gone", skill })?.kind).toBe("next");
+  });
+
   it("всё пройдено — каталог", () => {
     expect(heroState([scenario("a", "x", true)])).toEqual({ kind: "done" });
   });

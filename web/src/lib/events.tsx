@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ANALYTICS_KEY } from "./analytics";
 import { refreshSession } from "./api";
 import { GAMIFICATION_KEY } from "./gamification";
 
@@ -28,7 +29,8 @@ interface Notification {
 }
 
 // Одно подключение к /api/stream на всё приложение.
-// Уведомления → тосты, user.* → перечитать сотрудников, progress.updated → перечитать прогресс и награду.
+// Уведомления → тосты, user.* → перечитать сотрудников, progress.updated → перечитать прогресс и награду,
+// scenario.completed → перечитать навыки.
 // При обрыве: закрыть, обновить сессию и переподключиться с паузой 1…10 с
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -49,6 +51,8 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: ["users"] });
       } else if (event.type === "progress.updated") {
         void queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEY });
+      } else if (event.type === "scenario.completed") {
+        void queryClient.invalidateQueries({ queryKey: ANALYTICS_KEY });
       }
       for (const listener of listeners.get(event.type) ?? []) listener(event);
     };

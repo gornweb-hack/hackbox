@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import type { SkillScore, Training } from "./analytics";
 import { api } from "./api";
 
 export type CarClass = "Стандарт" | "Комфорт" | "Бизнес" | "Первый";
@@ -54,15 +55,19 @@ export function groupByCategory(scenarios: Scenario[]): CategoryGroup[] {
   return [...groups.values()];
 }
 
-// Что предложить на главной: первый сценарий новичку, следующий непройденный или весь каталог
+// Что предложить на главной: первый сценарий новичку, дальше — сценарий на слабый навык.
+// Без данных навыков — следующий непройденный или весь каталог
 export type HeroState =
   | { kind: "first"; scenario: Scenario }
+  | { kind: "training"; scenario: Scenario; skill: SkillScore }
   | { kind: "next"; scenario: Scenario }
   | { kind: "done" };
 
-export function heroState(scenarios: Scenario[]): HeroState | null {
+export function heroState(scenarios: Scenario[], training: Training | null = null): HeroState | null {
   if (scenarios.length === 0) return null;
   if (!scenarios.some((scenario) => scenario.completed)) return { kind: "first", scenario: scenarios[0] };
+  const recommended = training && scenarios.find((scenario) => scenario.id === training.scenarioId);
+  if (recommended) return { kind: "training", scenario: recommended, skill: training.skill };
   const next = scenarios.find((scenario) => !scenario.completed);
   return next ? { kind: "next", scenario: next } : { kind: "done" };
 }

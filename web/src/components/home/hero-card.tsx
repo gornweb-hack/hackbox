@@ -1,7 +1,8 @@
-import { ListIcon, PlayIcon } from "lucide-react";
+import { DumbbellIcon, ListIcon, PlayIcon, TargetIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ScenarioTags } from "@/components/scenario-tags";
+import type { Training } from "@/lib/analytics";
 import { heroState, type Scenario } from "@/lib/scenarios";
 
 // «Световые линии» — след поезда на скорости: положение, длина и самая яркая точка градиента
@@ -12,9 +13,9 @@ const LINES = [
 ];
 
 // Главная карточка — вход в следующую тренировку. Новичку — первый сценарий (кадр 1b),
-// дальше — первый непройденный, когда пройдено всё — каталог (кадр 1d)
-export function HeroCard({ scenarios }: { scenarios: Scenario[] }) {
-  const state = heroState(scenarios);
+// дальше — сценарий на слабый навык (кадр 1a); без данных навыков — первый непройденный или каталог (кадр 1d)
+export function HeroCard({ scenarios, training }: { scenarios: Scenario[]; training: Training | null }) {
+  const state = heroState(scenarios, training);
   if (!state) return null;
 
   if (state.kind === "done") {
@@ -28,6 +29,36 @@ export function HeroCard({ scenarios }: { scenarios: Scenario[] }) {
           <>
             <ListIcon className="size-[18px]" />
             Открыть каталог
+          </>
+        }
+      />
+    );
+  }
+
+  if (state.kind === "training") {
+    const { scenario, skill } = state;
+    return (
+      <Frame
+        kicker="Следующий сценарий"
+        title={scenario.title}
+        tags={<ScenarioTags scenario={scenario} tone="dark" />}
+        reason={
+          <>
+            <span className="flex items-center gap-2 text-sm text-[#b9c0cc]">
+              <DumbbellIcon className="size-4 text-[#93b2ff]" />
+              Тренирует: <span className="font-medium text-white">{skill.title}</span>
+            </span>
+            <span className="flex items-center gap-2.5 rounded-lg bg-white/7 px-3.5 py-3 text-sm text-white">
+              <TargetIcon className="size-[18px] shrink-0 text-[#93b2ff]" />
+              Ваш слабый навык — {skill.title}, {skill.value}%
+            </span>
+          </>
+        }
+        href={`/scenarios/${scenario.id}`}
+        cta={
+          <>
+            <PlayIcon className="size-[18px] fill-current" />
+            Начать
           </>
         }
       />
@@ -58,13 +89,16 @@ function Frame({
   title,
   subtitle,
   tags,
+  reason,
   href,
   cta,
 }: {
   kicker: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   tags?: ReactNode;
+  // Почему предложен этот сценарий: навык, который он тренирует
+  reason?: ReactNode;
   href: string;
   cta: ReactNode;
 }) {
@@ -88,9 +122,10 @@ function Frame({
         <h2 className="text-[26px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-white lg:text-[34px]">
           {title}
         </h2>
-        <p className="text-[15px] leading-[1.45] text-pretty text-[#b9c0cc]">{subtitle}</p>
+        {subtitle && <p className="text-[15px] leading-[1.45] text-pretty text-[#b9c0cc]">{subtitle}</p>}
       </div>
       {tags && <div className="relative">{tags}</div>}
+      {reason && <div className="relative flex flex-col items-start gap-3">{reason}</div>}
       <Link
         href={href}
         className="relative flex h-[52px] w-full items-center justify-center gap-2.5 self-start rounded-lg bg-primary px-[26px] text-base font-semibold text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/.08),0_8px_24px_-10px_rgb(46_100_255/.9)] transition-colors outline-none hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#93b2ff] active:scale-[.99] active:bg-primary-press lg:w-auto lg:min-w-[200px]"
