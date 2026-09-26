@@ -11,6 +11,8 @@ const env = process.env;
 export const config = {
   port: Number(env.PORT ?? 4000),
   databaseUrl: env.DATABASE_URL ?? '',
+  // Папка content/ со сценариями и справочниками. Без Docker ядро запускается из core/
+  contentDir: env.CONTENT_DIR ?? '../content',
   events: {
     redisUrl: env.REDIS_URL ?? 'redis://localhost:6379',
     // Через сколько миллисекунд необработанное событие забирается на повтор

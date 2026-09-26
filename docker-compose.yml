@@ -81,6 +81,11 @@ services:
       ADMIN_PASSWORD: admin123
       # Демо-аккаунты manager/manager123 и user/user123
       SEED_DEMO_USERS: "true"
+      CONTENT_DIR: /app/content
+    # Сценарии и справочники монтируются, а не копируются в образ:
+    # правка YAML видна сразу, без пересборки и перезапуска
+    volumes:
+      - ./content:/app/content:ro
     ports:
       - "127.0.0.1:${CORE_PORT:-4000}:4000"
     healthcheck:

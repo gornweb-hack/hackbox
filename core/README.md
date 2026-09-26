@@ -36,6 +36,7 @@ npm run start:dev
 | `src/events/` | `EventsModule`: `events.service.ts` (публикация по принципу «лучшее усилие»), `events.consumer.ts` (группа `core`: чтение, повторы, DLQ), `envelope.ts` (конверт), `stream.controller.ts` (SSE `/api/stream`), `redis.ts` (подключения). Правила — в [памятке по событиям](../docs/events.md) |
 | `src/prisma/` | `PrismaModule`: одно подключение к базе на всё приложение |
 | `src/health/` | `HealthModule`: `GET /api/health` с проверкой базы и статусом Redis |
+| `src/scenarios/` | `ScenariosModule`: `GET /api/scenarios` — каталог из `content/scenarios/*.yaml`, файлы читаются при каждом запросе. `catalog.ts` — разбор и проверка файлов. Формат — в [памятке по контенту](../docs/content.md) |
 | `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id` |
 | `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 
