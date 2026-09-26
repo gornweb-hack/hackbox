@@ -6,6 +6,7 @@ import { AppModule } from './app.module.js';
 import { ApiError } from './common/api-error.js';
 import { ErrorFilter } from './common/error.filter.js';
 import { requestId } from './common/request-id.js';
+import { setupSwagger } from './common/swagger.js';
 import { config } from './config.js';
 
 const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -29,5 +30,6 @@ app.useGlobalPipes(
   }),
 );
 app.enableShutdownHooks();
+setupSwagger(app);
 
 await app.listen(config.port);

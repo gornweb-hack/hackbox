@@ -14,6 +14,8 @@ docker compose up -d --build
 
 Ядро отвечает на `http://127.0.0.1:4000/api/health`.
 
+Весь API с примерами ответов — в Swagger: [http://127.0.0.1:3000/api/docs](http://127.0.0.1:3000/api/docs), схема OpenAPI — `/api/docs-json`. После входа в тренажёр в этой же вкладке запросы «Try it out» идут с вашей сессией.
+
 Файл `.env` не нужен. Если порт 5432, 4000 или 6379 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT`, `CORE_PORT` или `REDIS_PORT`.
 
 В `docker compose ps -a` сервис `db-init` показывает `Exited (0)`. Так и должно быть: он настраивает роль ядра и завершается. Если он упал, смотрите `docker compose logs db-init`. Флаг `--wait` не используйте: Compose считает завершение `db-init` ошибкой.

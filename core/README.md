@@ -29,7 +29,7 @@ npm run start:dev
 
 | Путь | Что там |
 |---|---|
-| `src/main.ts` | запуск: префикс `/api`, cookie, формат ошибок, валидация (`422 VALIDATION_ERROR`) |
+| `src/main.ts` | запуск: префикс `/api`, cookie, формат ошибок, валидация (`422 VALIDATION_ERROR`), Swagger |
 | `src/app.module.ts` | список модулей приложения |
 | `src/auth/` | `AuthModule` (`auth.module.ts`) — вход и сотрудники. Внутри: `tokens.ts` (access-JWT из cookie или Bearer), `auth.service.ts` (вход, refresh с ротацией, выход, регистрация), `auth.guard.ts` (`AuthGuard`, `@Roles`, `@CurrentUser`), `password.ts` (scrypt), `seed.ts` (демо-аккаунты при старте) |
 | `src/users/` | часть `AuthModule`: `GET /api/users`, `POST` и `PATCH /api/users` для админа; публикует `user.created` и `user.updated` |
@@ -39,7 +39,7 @@ npm run start:dev
 | `src/scenarios/` | `ScenariosModule`: каталог из `content/scenarios/*.yaml` (файлы читаются при каждом запросе) и прохождения `/api/scenarios/runs`. `script.ts` — формат диалога, `engine.ts` — правила: шкалы, переходы, таймер. `runs.service.ts` хранит прохождения и в финале публикует `scenario.completed`. Формат — в [памятке по контенту](../docs/content.md) |
 | `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация, `achievements.ts` — полученные ачивки, ачивки прохождения и прогресс к следующей, `rating.ts` — места за месяц. `GET /api/gamification/me/progress`, `GET /api/gamification/me/achievements`, `GET /api/gamification/runs/:runId/reward` и `GET /api/gamification/rating`, события `progress.updated` и тосты о новом уровне и ачивках |
 | `src/analytics/` | `AnalyticsModule`: навыки по решениям и меткам `skills` из `content/skills.yaml`. `skills.ts` — процент, слабый навык и рекомендация. Своей таблицы нет: решения — через `RunsService`, сценарии — через `ScenariosService`. `GET /api/analytics/me/skills` |
-| `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id` |
+| `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id`, `swagger.ts` — документ API на `/api/docs` (схемы DTO строит плагин в `nest-cli.json`) |
 | `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 
 Закрыть свой эндпоинт входом и ролью:

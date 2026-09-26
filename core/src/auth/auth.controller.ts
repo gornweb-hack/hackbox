@@ -1,4 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiAuth } from '../common/swagger.js';
 import type { CookieOptions, Request, Response } from 'express';
 import { ApiError } from '../common/api-error.js';
 import { config } from '../config.js';
@@ -27,6 +29,7 @@ function refreshTokenFrom(req: Request): string | undefined {
   return (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE] || undefined;
 }
 
+@ApiTags('Вход')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -34,6 +37,7 @@ export class AuthController {
     private readonly users: UsersService,
   ) {}
 
+  @ApiOperation({ summary: 'Войти по логину и паролю', description: 'Ставит cookie сессии и возвращает accessToken и refreshToken для Bearer' })
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<Session> {
@@ -42,6 +46,7 @@ export class AuthController {
     return session;
   }
 
+  @ApiOperation({ summary: 'Регистрация с ролью USER', description: 'Только при REGISTRATION_OPEN=true' })
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response): Promise<Session> {
     const session = await this.auth.register(dto);
@@ -49,6 +54,8 @@ export class AuthController {
     return session;
   }
 
+  @ApiOperation({ summary: 'Новая пара токенов', description: 'Refresh-токен — из cookie или из тела {refreshToken}' })
+  @ApiBody({ required: false, schema: { properties: { refreshToken: { type: 'string' } } } })
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<Session> {
@@ -57,6 +64,7 @@ export class AuthController {
     return session;
   }
 
+  @ApiOperation({ summary: 'Выйти: отозвать refresh-токен и стереть cookie' })
   @Post('logout')
   @HttpCode(204)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
@@ -65,6 +73,8 @@ export class AuthController {
     res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
   }
 
+  @ApiOperation({ summary: 'Профиль вошедшего: имя, роль, бригада и депо' })
+  @ApiAuth()
   @Get('me')
   @UseGuards(AuthGuard)
   async me(@CurrentUser() user: AuthUser): Promise<UserProfile> {

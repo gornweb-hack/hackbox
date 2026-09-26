@@ -1,4 +1,6 @@
 import { Controller, type MessageEvent, Sse, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiAuth } from '../common/swagger.js';
 import { filter, interval, map, merge, type Observable } from 'rxjs';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard.js';
 import type { AuthUser } from '../auth/tokens.js';
@@ -8,12 +10,15 @@ import { EventsConsumer } from './events.consumer.js';
 // Как часто слать ping, чтобы прокси не закрывали «молчащее» соединение
 const PING_MS = 25_000;
 
+@ApiTags('События')
 @Controller()
 export class StreamController {
   constructor(private readonly consumer: EventsConsumer) {}
 
   // SSE: события пользователя и broadcast-события (data — конверт события)
   // и ping (именованное событие, onmessage его не видит)
+  @ApiOperation({ summary: 'SSE-поток событий пользователя', description: 'data — конверт события {id, type, source, time, userId?, broadcast?, data}; раз в 25 с — событие ping. Формат — docs/events.md' })
+  @ApiAuth()
   @Sse('stream')
   @UseGuards(AuthGuard)
   stream(@CurrentUser() user: AuthUser): Observable<MessageEvent> {

@@ -84,6 +84,7 @@ docker compose up -d --build
    - списки — `{items, total}`.
 8. **Настройки** — только из переменных окружения: поле в `core/src/config.ts`, значение в `docker-compose.yml` у сервиса `core` и пример в `core/.env.example`.
 9. **ESM.** Относительные импорты пишутся с `.js`: `./scenarios.service.js`.
+10. **Swagger** (`/api/docs`) — у контроллера `@ApiTags('Группа')` и `@ApiAuth()` из `core/src/common/swagger.ts`, у эндпоинта — `@ApiOperation({ summary: '…' })`. Схемы тел запросов строит плагин Nest CLI из классов в файлах `dto.ts`, поэтому отдельных `@ApiProperty` не нужно. Ответы у нас — интерфейсы, их плагин не видит: для важных эндпоинтов добавьте `@ApiOkResponse({ example })` с примером из `api-examples.ts` модуля.
 
 ## 5. База
 
