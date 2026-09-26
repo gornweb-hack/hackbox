@@ -51,15 +51,15 @@ export function TimerBar({
   const secondsLeft = Math.ceil(left / 1000);
   const urgent = left <= seconds * 1000 * URGENT_SHARE;
   return (
-    <div className="flex items-center gap-3">
-      <TimerIcon className="size-5 shrink-0 text-primary-text" />
+    <div className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-card">
+      <TimerIcon className={cn("size-6 shrink-0", urgent ? "text-destructive" : "text-primary-text")} />
       <div
         role="progressbar"
         aria-label="Время на решение"
         aria-valuemin={0}
         aria-valuemax={seconds}
         aria-valuenow={secondsLeft}
-        className="h-2 flex-1 overflow-hidden rounded-full bg-track"
+        className="h-2.5 flex-1 overflow-hidden rounded-full bg-track"
       >
         <div
           className={cn(
@@ -69,7 +69,7 @@ export function TimerBar({
           style={{ width: `${(left / (seconds * 1000)) * 100}%` }}
         />
       </div>
-      <span className="shrink-0 text-sm font-medium">Осталось {secondsLeft} с</span>
+      <span className={cn("shrink-0 text-lg font-semibold", urgent && "text-destructive")}>{secondsLeft} с</span>
     </div>
   );
 }

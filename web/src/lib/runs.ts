@@ -30,7 +30,9 @@ export interface RunView {
     // remainingMs считает сервер: часы клиента не важны
     timer?: { seconds: number; remainingMs: number };
   };
-  last?: { answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number };
+  // action — что делает проводник в этом ответе (поле action варианта в YAML), по нему сцена
+  // показывает свою анимацию; у ответа без action и при «время вышло» поля нет
+  last?: { answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number; action?: string };
   outcome?: Outcome;
   finalText?: string;
   decisions?: Decision[];
