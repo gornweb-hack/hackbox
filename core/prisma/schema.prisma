@@ -107,10 +107,15 @@ model GamificationRun {
   runId      String   @unique @map("run_id") @db.Uuid
   userId     String   @map("user_id") @db.Uuid
   scenarioId String   @map("scenario_id")
+  // Категория сценария — для ачивок вроде «Первой помощи» и «Универсала»
+  category   String   @default("")
   // good, ok или bad
   outcome    String
   loyalty    Int
   safety     Int
+  // Сколько решений было на время и сколько из них не успели — для «Холодной головы»
+  timeouts       Int @default(0)
+  timedDecisions Int @default(0) @map("timed_decisions")
   // Время из события, а не время записи: по нему считается тренд за неделю
   finishedAt DateTime @map("finished_at") @db.Timestamptz(3)
 
