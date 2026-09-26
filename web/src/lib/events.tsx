@@ -5,7 +5,7 @@ import { createContext, type ReactNode, useContext, useEffect, useRef, useState 
 import { toast } from "sonner";
 import { refreshSession } from "./api";
 
-// Событие из SSE /api/stream — конверт из контракта (docs/module-contract.md, раздел «События»)
+// Событие из SSE /api/stream — конверт события (docs/events.md)
 export interface AppEvent<T = unknown> {
   id?: string;
   type: string;

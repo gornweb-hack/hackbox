@@ -6,7 +6,7 @@ export const DLQ_STREAM = 'events:dlq';
 // Стрим обрезается примерно до стольких записей, чтобы Redis не рос бесконечно
 export const STREAM_MAX_LEN = '10000';
 
-// Конверт события — одинаковый для всех языков (docs/module-contract.md, раздел «События»)
+// Конверт события (docs/events.md)
 export interface EventEnvelope<T = unknown> {
   id: string;
   type: string;
