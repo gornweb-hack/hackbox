@@ -64,6 +64,7 @@ await this.events.publish(
 |---|---|---|---|
 | `notification.requested` | любой модуль | `{title, message, level: "info" \| "success" \| "warning"}` | тост в браузере. Нужен `userId` или `broadcast: true`, иначе событие уйдёт в DLQ |
 | `user.created`, `user.updated` | вход и сотрудники (`UsersService`) | `{id, name, role}` | фронт перечитывает список сотрудников |
+| `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читают геймификация и аналитика |
 
 ## Ключи в Redis
 

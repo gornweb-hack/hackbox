@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ApiError } from '../common/api-error.js';
 import { config } from '../config.js';
-import { buildCatalog, type ScenarioMeta } from './catalog.js';
+import { buildCatalog, type Scenario } from './catalog.js';
 
 const isMissing = (error: unknown) => (error as NodeJS.ErrnoException).code === 'ENOENT';
 
@@ -15,7 +15,7 @@ export class ScenariosService {
   // Одни и те же ошибки в файлах пишем в лог один раз, а не на каждый запрос
   private lastWarning = '';
 
-  async catalog(): Promise<ScenarioMeta[]> {
+  async catalog(): Promise<Scenario[]> {
     let categories: string;
     try {
       categories = await readFile(join(config.contentDir, 'categories.yaml'), 'utf8');
@@ -44,6 +44,12 @@ export class ScenariosService {
     }
     this.warn(catalog.errors.map((error) => `сценарий пропущен — ${error}`).join('\n'));
     return catalog.items;
+  }
+
+  async find(id: string): Promise<Scenario> {
+    const scenario = (await this.catalog()).find((item) => item.meta.id === id);
+    if (!scenario) throw new ApiError(404, 'SCENARIO_NOT_FOUND', 'Сценарий не найден');
+    return scenario;
   }
 
   private warn(message: string): void {

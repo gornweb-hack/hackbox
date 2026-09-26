@@ -15,11 +15,21 @@ category: medical
 carClass: Комфорт
 durationMin: 4
 order: 3
+start: ask
+nodes:
+  ask:
+    text: Пассажиру плохо
+    timer: 15
+    timeout: {review: Медлили, to: done}
+    choices:
+      - {id: help, text: Помочь, review: Верно, to: done}
+  done: {text: Помогли, final: good}
 ${fields}`;
 
 describe('parseScenario', () => {
-  it('правильный файл', () => {
-    expect(parseScenario('sick-passenger', scenario('new: true'), categories)).toEqual({
+  it('правильный файл: описание для каталога и граф для прохождения', () => {
+    const { meta, script } = parseScenario('sick-passenger', scenario('new: true'), categories);
+    expect(meta).toEqual({
       id: 'sick-passenger',
       title: 'Пассажиру плохо на 400 км/ч',
       summary: 'Пассажиру стало плохо на полном ходу.',
@@ -28,11 +38,16 @@ describe('parseScenario', () => {
       durationMin: 4,
       order: 3,
       isNew: true,
+      hasTimers: true,
     });
+    expect(script.start).toBe('ask');
   });
 
-  it('без new сценарий не новый', () => {
-    expect(parseScenario('sick-passenger', scenario(''), categories).isNew).toBe(false);
+  it('без new сценарий не новый, без timer — без таймеров', () => {
+    const text = scenario('').replace(/ {4}timer: 15\n {4}timeout: .*\n/, '');
+    const { meta } = parseScenario('sick-passenger', text, categories);
+    expect(meta.isNew).toBe(false);
+    expect(meta.hasTimers).toBe(false);
   });
 
   it('нет title', () => {
@@ -54,6 +69,16 @@ describe('parseScenario', () => {
     const text = scenario('').replace('durationMin: 4', 'durationMin: четыре');
     expect(() => parseScenario('sick-passenger', text, categories)).toThrow('durationMin должно быть числом');
   });
+
+  it('без диалога сценарий не проходится', () => {
+    const text = scenario('').replace('start: ask', '');
+    expect(() => parseScenario('sick-passenger', text, categories)).toThrow('нет поля start');
+  });
+
+  it('имя файла попадает в адрес страницы', () => {
+    expect(() => parseScenario('Sick Passenger', scenario(''), categories)).toThrow('имя файла');
+    expect(() => parseScenario('runs', scenario(''), categories)).toThrow('не runs');
+  });
 });
 
 describe('buildCatalog', () => {
@@ -65,7 +90,7 @@ describe('buildCatalog', () => {
       { id: 'broken', text: scenario('').replace('carClass: Комфорт', 'carClass: Эконом') },
       { id: 'early', text: scenario('').replace('order: 3', 'order: 1') },
     ]);
-    expect(items.map((item) => item.id)).toEqual(['early', 'late']);
+    expect(items.map((item) => item.meta.id)).toEqual(['early', 'late']);
     expect(errors).toEqual(['broken.yaml: класс «Эконом» не из списка: Стандарт, Комфорт, Бизнес, Первый']);
   });
 

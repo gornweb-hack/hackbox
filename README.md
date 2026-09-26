@@ -68,7 +68,19 @@ docker compose up -d --build
 
 | Эндпоинт | Кто | Что делает |
 |---|---|---|
-| `GET /api/scenarios` | вошедший | каталог `{items, total}` по порядку; сценарий — `{id, title, summary, category: {id, title}, carClass, durationMin, order, isNew}` |
+| `GET /api/scenarios` | вошедший | каталог `{items, total}` по порядку; сценарий — `{id, title, summary, category: {id, title}, carClass, durationMin, order, isNew, hasTimers, completed}`, где `completed` — вошедший хоть раз дошёл до финала |
+| `POST /api/scenarios/runs` `{scenarioId}` | вошедший | начать прохождение: `201` и его состояние |
+| `GET /api/scenarios/runs/:id` | владелец прохождения | состояние: текущий узел с вариантами и таймером (`remainingMs` считает сервер), шкалы `loyalty` и `safety`, последнее решение. После финала — исход, текст финала и разбор `decisions` |
+| `POST /api/scenarios/runs/:id/choices` `{choiceId?}` | владелец прохождения | решение в текущем узле; без `choiceId` — «время вышло». Выбор после дедлайна засчитывается как истёкшее время |
+
+Ошибки прохождения:
+- `404 SCENARIO_NOT_FOUND`, `404 RUN_NOT_FOUND` — так же отвечает и чужое прохождение;
+- `409 RUN_FINISHED` — прохождение уже завершено;
+- `409 RUN_CONFLICT` — решение уже принято, например при двойном клике;
+- `409 SCENARIO_CHANGED` — текущий узел убрали из YAML, прохождение нужно начать заново;
+- `422 CHOICE_NOT_FOUND`, `422 CHOICE_REQUIRED`, `422 TIMER_NOT_EXPIRED`.
+
+В финале публикуется событие `scenario.completed`, см. [памятку по событиям](docs/events.md).
 
 ## События и уведомления
 

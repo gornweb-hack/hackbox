@@ -1,6 +1,6 @@
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
-import { applyChoice, applyTimeout, resolveAction, startState, TIMER_GRACE_MS } from './engine.js';
+import { applyChoice, applyTimeout, resolveAction, startState, TIMER_GRACE_MS, timerState } from './engine.js';
 import { parseScript } from './script.js';
 
 const script = parseScript(
@@ -91,5 +91,11 @@ describe('таймер', () => {
 
   it('без таймера нужно выбрать вариант', () => {
     expect(() => resolveAction(script.nodes.done, shownAt, 5_000, undefined)).toThrow('Выберите вариант ответа');
+  });
+
+  it('оставшееся время не уходит в минус, у узла без таймера его нет', () => {
+    expect(timerState(node, shownAt, 5_000)).toEqual({ seconds: 15, remainingMs: 10_000 });
+    expect(timerState(node, shownAt, 60_000)).toEqual({ seconds: 15, remainingMs: 0 });
+    expect(timerState(script.nodes.done, shownAt, 5_000)).toBeUndefined();
   });
 });

@@ -104,3 +104,10 @@ export function resolveAction(node: ScenarioNode, shownAt: number, now: number, 
   // Выбор, сделанный после дедлайна, засчитывается как истёкшее время
   return deadline !== null && now > deadline + TIMER_GRACE_MS ? null : choiceId;
 }
+
+// Таймер узла для фронта: всего секунд и сколько осталось. Остаток считает сервер,
+// поэтому расхождение часов клиента не мешает
+export function timerState(node: ScenarioNode, shownAt: number, now: number): { seconds: number; remainingMs: number } | undefined {
+  if (node.timer === undefined) return undefined;
+  return { seconds: node.timer, remainingMs: Math.max(0, shownAt + node.timer * 1000 - now) };
+}

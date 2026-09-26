@@ -1,4 +1,5 @@
 import { parse } from 'yaml';
+import { parseScript, type Script } from './script.js';
 
 // Классы обслуживания ВСМ по СТО РЖД 03.011. Остальное («Эконом», опечатки) отсекается при загрузке
 export const CAR_CLASSES = ['Стандарт', 'Комфорт', 'Бизнес', 'Первый'] as const;
@@ -18,6 +19,14 @@ export interface ScenarioMeta {
   durationMin: number;
   order: number;
   isNew: boolean;
+  // Хотя бы одно решение — на время
+  hasTimers: boolean;
+}
+
+// Описание — для каталога, граф — для прохождения
+export interface Scenario {
+  meta: ScenarioMeta;
+  script: Script;
 }
 
 export interface CatalogFile {
@@ -50,8 +59,12 @@ export function parseCategories(text: string): Category[] {
   });
 }
 
-// content/scenarios/<id>.yaml — описание сценария для каталога
-export function parseScenario(id: string, text: string, categories: Category[]): ScenarioMeta {
+// content/scenarios/<id>.yaml — описание сценария и его диалог
+export function parseScenario(id: string, text: string, categories: Category[]): Scenario {
+  // id — имя файла, он стоит в адресе страницы; runs занят адресом прохождения
+  if (!/^[a-z0-9-]+$/.test(id) || id === 'runs') {
+    throw new Error('имя файла — латиница в нижнем регистре, цифры и дефис, не runs');
+  }
   const data: unknown = parse(text);
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('ожидается описание сценария');
   const fields = data as Record<string, unknown>;
@@ -60,24 +73,29 @@ export function parseScenario(id: string, text: string, categories: Category[]):
   if (!category) throw new Error(`неизвестная категория «${String(fields.category)}»`);
   const carClass = CAR_CLASSES.find((item) => item === fields.carClass);
   if (!carClass) throw new Error(`класс «${String(fields.carClass)}» не из списка: ${CAR_CLASSES.join(', ')}`);
+  const script = parseScript(fields);
 
   return {
-    id,
-    title: requireString(fields, 'title'),
-    summary: requireString(fields, 'summary'),
-    category,
-    carClass,
-    durationMin: requireNumber(fields, 'durationMin'),
-    order: requireNumber(fields, 'order'),
-    isNew: fields.new === true,
+    meta: {
+      id,
+      title: requireString(fields, 'title'),
+      summary: requireString(fields, 'summary'),
+      category,
+      carClass,
+      durationMin: requireNumber(fields, 'durationMin'),
+      order: requireNumber(fields, 'order'),
+      isNew: fields.new === true,
+      hasTimers: Object.values(script.nodes).some((node) => node.timer !== undefined),
+    },
+    script,
   };
 }
 
 // Каталог по порядку. Файл с ошибкой не попадает в список, а его ошибка — в errors:
 // опечатка в одном сценарии не должна прятать остальные
-export function buildCatalog(categoriesText: string, files: CatalogFile[]): { items: ScenarioMeta[]; errors: string[] } {
+export function buildCatalog(categoriesText: string, files: CatalogFile[]): { items: Scenario[]; errors: string[] } {
   const categories = parseCategories(categoriesText);
-  const items: ScenarioMeta[] = [];
+  const items: Scenario[] = [];
   const errors: string[] = [];
   for (const file of files) {
     try {
@@ -86,6 +104,6 @@ export function buildCatalog(categoriesText: string, files: CatalogFile[]): { it
       errors.push(`${file.id}.yaml: ${(error as Error).message}`);
     }
   }
-  items.sort((a, b) => a.order - b.order);
+  items.sort((a, b) => a.meta.order - b.meta.order);
   return { items, errors };
 }
