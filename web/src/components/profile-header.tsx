@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type Me, useLogout } from "@/lib/auth";
 import type { ProfileSummary } from "@/lib/demo";
+import { useProgress } from "@/lib/gamification";
 
 const plural = new Intl.PluralRules("ru-RU");
 
@@ -27,6 +28,8 @@ function initials(name: string) {
 // Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар
 export function ProfileHeader({ me, profile }: { me: Me; profile: ProfileSummary }) {
   const logout = useLogout();
+  // Титул — название уровня из геймификации
+  const { data: progress } = useProgress();
   const bellLabel =
     profile.unread > 0
       ? `Уведомления: ${profile.unread} ${plural.select(profile.unread) === "one" ? "новое" : "новых"}`
@@ -63,7 +66,7 @@ export function ProfileHeader({ me, profile }: { me: Me; profile: ProfileSummary
 
       <div className="flex min-w-0 flex-1 flex-col gap-px">
         <span className="truncate text-[19px] font-semibold tracking-[-0.015em]">{me.name}</span>
-        <span className="text-sm font-medium text-primary-text">{profile.title}</span>
+        {progress && <span className="text-sm font-medium text-primary-text">{progress.level.title}</span>}
         <span className="text-[13px] text-muted-foreground">{profile.crew}</span>
       </div>
 

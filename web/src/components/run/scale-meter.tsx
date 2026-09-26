@@ -6,8 +6,19 @@ const ICONS = { loyalty: SmileIcon, safety: ShieldIcon };
 const TONES = { red: "bg-zone-red", yellow: "bg-zone-yellow", green: "bg-zone-green" };
 
 // Шкала по макету (блок «Репутация»): иконка, название, зона, значение, полоса с зонами.
-// Смысл не передаётся одним цветом — у шкалы есть иконка, подпись зоны и число
-export function ScaleMeter({ scale, value, delta }: { scale: ScaleName; value: number; delta?: number }) {
+// Смысл не передаётся одним цветом — у шкалы есть иконка, подпись зоны и число.
+// delta — изменение: после решения в прохождении или за неделю в репутации (deltaLabel — «за неделю»)
+export function ScaleMeter({
+  scale,
+  value,
+  delta,
+  deltaLabel,
+}: {
+  scale: ScaleName;
+  value: number;
+  delta?: number | null;
+  deltaLabel?: string;
+}) {
   const Icon = ICONS[scale];
   const zone = zoneOf(value);
 
@@ -30,6 +41,7 @@ export function ScaleMeter({ scale, value, delta }: { scale: ScaleName; value: n
             <span className="flex items-center gap-[3px] text-xs whitespace-nowrap text-muted-foreground">
               {delta > 0 ? <ArrowUpIcon className="size-3.5 text-foreground" /> : <ArrowDownIcon className="size-3.5 text-foreground" />}
               {formatDelta(delta)}
+              {deltaLabel && ` ${deltaLabel}`}
             </span>
           ) : null}
         </div>
