@@ -1,38 +1,40 @@
 "use client";
 
-import { LogOutIcon, MenuIcon } from "lucide-react";
+import { BookOpenIcon, HouseIcon, type LucideIcon, TrophyIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import type { ReactNode } from "react";
+import { ProfileHeader } from "@/components/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type Me, type Role, ROLE_LABELS, useLogout, useMe } from "@/lib/auth";
+import { useMe } from "@/lib/auth";
+import { DEMO_PROFILE } from "@/lib/demo";
 import { EventStreamProvider } from "@/lib/events";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
   href: string;
   label: string;
-  roles?: Role[];
+  icon: LucideIcon;
 }
 
-// Пункты меню; roles — кому пункт виден
+// Разделы тренажёра. Администрирование — в меню аватара (ProfileHeader)
 const NAV: NavItem[] = [
-  { href: "/", label: "Главная" },
-  { href: "/admin", label: "Администрирование", roles: ["ADMIN"] },
+  { href: "/", label: "Главная", icon: HouseIcon },
+  { href: "/scenarios", label: "Сценарии", icon: BookOpenIcon },
+  { href: "/rating", label: "Рейтинг", icon: TrophyIcon },
+  { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-// Каркас для вошедших: шапка с меню по ролям, выход, одно SSE-подключение на всё приложение
+// Каркас для вошедших: сайдбар на десктопе, нижняя навигация на телефоне,
+// шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
 
   if (isPending) {
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-40 w-full" />
+      <div className="flex w-full flex-col gap-3 p-4 lg:p-8">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-72 w-full" />
       </div>
     );
   }
@@ -45,88 +47,78 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const items = NAV.filter((item) => !item.roles || item.roles.includes(me.role));
   return (
     <EventStreamProvider>
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-4 px-4">
-          <MobileNav items={items} me={me} />
-          <Link href="/" className="font-semibold">
-            hackbox
-          </Link>
-          <nav className="hidden items-center gap-1 md:flex">
-            {items.map((item) => (
-              <NavLink key={item.href} item={item} />
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <UserBadge me={me} className="hidden sm:flex" />
-            <LogoutButton />
-          </div>
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-7 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
+            <ProfileHeader me={me} profile={DEMO_PROFILE} />
+            {children}
+          </main>
+          <BottomNav />
         </div>
-      </header>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4">{children}</main>
+      </div>
     </EventStreamProvider>
   );
 }
 
-function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
-}
-
-function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+function useActive() {
   const pathname = usePathname();
+  return (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+}
+
+function Sidebar() {
+  const isActive = useActive();
   return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-        isActive(pathname, item.href) && "bg-muted font-medium text-foreground",
-      )}
-    >
-      {item.label}
-    </Link>
+    <aside className="sticky top-0 hidden h-svh w-[248px] shrink-0 flex-col gap-7 border-r bg-card px-4 py-7 lg:flex">
+      <Link href="/" className="flex items-center gap-2.5 px-2.5">
+        {/* Логотип — «след скорости»: три линии, короче и прозрачнее к хвосту */}
+        <span aria-hidden className="flex w-[22px] flex-col items-end gap-[3px]">
+          <span className="h-0.5 w-full rounded-full bg-primary" />
+          <span className="h-0.5 w-[70%] rounded-full bg-primary opacity-60" />
+          <span className="h-0.5 w-[45%] rounded-full bg-primary opacity-35" />
+        </span>
+        <span className="flex flex-col">
+          <span className="text-[17px] font-semibold tracking-[-0.01em]">Рейс 400</span>
+          <span className="text-xs text-muted-foreground">Тренажёр проводника</span>
+        </span>
+      </Link>
+      <nav className="flex flex-col gap-1">
+        {NAV.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={isActive(href) ? "page" : undefined}
+            className={cn(
+              "flex h-11 items-center gap-3 rounded-md px-3 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-muted",
+              "aria-[current=page]:bg-primary-soft aria-[current=page]:font-semibold aria-[current=page]:text-primary-text",
+            )}
+          >
+            <Icon className="size-5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </aside>
   );
 }
 
-function UserBadge({ me, className }: { me: Me; className?: string }) {
+function BottomNav() {
+  const isActive = useActive();
   return (
-    <div className={cn("items-center gap-2 text-sm", className)}>
-      <span className="font-medium">{me.name}</span>
-      <Badge variant="secondary">{ROLE_LABELS[me.role]}</Badge>
-    </div>
-  );
-}
-
-function LogoutButton() {
-  const logout = useLogout();
-  return (
-    <Button variant="ghost" size="icon" onClick={() => void logout()} aria-label="Выйти" title="Выйти">
-      <LogOutIcon />
-    </Button>
-  );
-}
-
-// На телефоне — меню-гамбургер с боковой панелью
-function MobileNav({ items, me }: { items: NavItem[]; me: Me }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden" aria-label="Меню" />}>
-        <MenuIcon />
-      </SheetTrigger>
-      <SheetContent side="left">
-        <SheetHeader>
-          <SheetTitle>hackbox</SheetTitle>
-          <UserBadge me={me} className="flex" />
-        </SheetHeader>
-        <nav className="flex flex-col gap-1 px-4">
-          {items.map((item) => (
-            <NavLink key={item.href} item={item} onClick={() => setOpen(false)} />
-          ))}
-        </nav>
-      </SheetContent>
-    </Sheet>
+    <nav className="sticky bottom-0 z-40 grid grid-cols-4 border-t bg-card px-2 py-1.5 lg:hidden">
+      {NAV.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          aria-current={isActive(href) ? "page" : undefined}
+          className="flex h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium text-muted-foreground active:bg-muted aria-[current=page]:font-semibold aria-[current=page]:text-primary-text"
+        >
+          <Icon className="size-[22px]" />
+          {label}
+        </Link>
+      ))}
+    </nav>
   );
 }
