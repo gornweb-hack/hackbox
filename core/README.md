@@ -37,7 +37,7 @@ npm run start:dev
 | `src/prisma/` | `PrismaModule`: одно подключение к базе на всё приложение |
 | `src/health/` | `HealthModule`: `GET /api/health` с проверкой базы и статусом Redis |
 | `src/scenarios/` | `ScenariosModule`: каталог из `content/scenarios/*.yaml` (файлы читаются при каждом запросе) и прохождения `/api/scenarios/runs`. `script.ts` — формат диалога, `engine.ts` — правила: шкалы, переходы, таймер. `runs.service.ts` хранит прохождения и в финале публикует `scenario.completed`. Формат — в [памятке по контенту](../docs/content.md) |
-| `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация. `GET /api/gamification/me/progress`, события `progress.updated` и тост о новом уровне |
+| `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация, `achievements.ts` — полученные ачивки, ачивки прохождения и прогресс к следующей. `GET /api/gamification/me/progress` и `GET /api/gamification/runs/:runId/reward`, события `progress.updated` и тосты о новом уровне и ачивках |
 | `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id` |
 | `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 

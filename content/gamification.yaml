@@ -19,3 +19,42 @@ xp:
 # Репутация — среднее итоговых шкал за столько последних прохождений
 reputation:
   window: 10
+
+# Ачивки. when — одно правило:
+#   runs: N — всего прохождений; categories: N — разных категорий;
+#   run: {...} — хотя бы одно прохождение подходит под все условия:
+#     category, outcome (good/ok/bad), minLoyalty, minSafety,
+#     noTimeouts: true — были решения на время и ни одного таймаута
+achievements:
+  - id: first-trip
+    title: Первый рейс
+    description: Пройдите первый сценарий
+    when: {runs: 1}
+  - id: cold-head
+    title: Холодная голова
+    description: Сценарий с таймерами без единого таймаута
+    when: {run: {noTimeouts: true}}
+  - id: first-aid
+    title: Первая помощь
+    description: Медицинский сценарий на отлично
+    when: {run: {category: medical, outcome: good}}
+  - id: peacemaker
+    title: Миротворец
+    description: Конфликт на отлично — никто не ушёл обиженным
+    when: {run: {category: conflict, outcome: good}}
+  - id: safety-first
+    title: Безопасность прежде всего
+    description: Рейтинг безопасности 80 и выше в финале
+    when: {run: {minSafety: 80}}
+  - id: passenger-voice
+    title: Голос пассажира
+    description: Лояльность пассажира 80 и выше в финале
+    when: {run: {minLoyalty: 80}}
+  - id: all-rounder
+    title: Универсал
+    description: Пройдите сценарии всех четырёх категорий
+    when: {categories: 4}
+  - id: marathon
+    title: Марафон
+    description: Десять прохождений
+    when: {runs: 10}

@@ -22,7 +22,30 @@ describe('parseRules', () => {
       ],
       xp: { good: 150, ok: 100, bad: 50 },
       reputation: { window: 10 },
+      achievements: [],
     });
+  });
+
+  it('разбирает ачивки трёх видов', () => {
+    const rules = parseRules(`${valid}
+achievements:
+  - {id: first, title: Первый рейс, description: Первый сценарий, when: {runs: 1}}
+  - {id: all, title: Универсал, description: Все категории, when: {categories: 4}}
+  - {id: aid, title: Первая помощь, description: Медицина на отлично, when: {run: {category: medical, outcome: good}}}
+`);
+    expect(rules.achievements.map((achievement) => achievement.when)).toEqual([
+      { runs: 1 },
+      { categories: 4 },
+      { run: { category: 'medical', outcome: 'good' } },
+    ]);
+  });
+
+  it('у ачивки одно правило и известные условия', () => {
+    const achievement = (when: string) => () =>
+      parseRules(`${valid}\nachievements:\n  - {id: a, title: A, description: B, when: ${when}}`);
+    expect(achievement('{runs: 1, categories: 2}')).toThrow('одно правило');
+    expect(achievement('{run: {minSpeed: 5}}')).toThrow('неизвестное условие');
+    expect(achievement('{runs: 0}')).toThrow('целое число больше нуля');
   });
 
   it('первый порог — 0', () => {

@@ -113,6 +113,8 @@ export class RunsService {
         loyalty: run.loyalty,
         safety: run.safety,
         timeouts: run.decisions.filter((decision) => decision.choiceId === null).length,
+        // Сколько решений было на время: без них ачивке «Холодная голова» не за что засчитываться
+        timedDecisions: run.decisions.filter((decision) => scenario.script.nodes[decision.nodeId]?.timer !== undefined).length,
         durationSec: Math.round((finishedAt.getTime() - run.startedAt.getTime()) / 1000),
         finishedAt: finishedAt.toISOString(),
         decisions: run.decisions.map((decision) => ({

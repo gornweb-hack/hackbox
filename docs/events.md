@@ -72,8 +72,8 @@ onModuleInit(): void {
 |---|---|---|---|
 | `notification.requested` | любой модуль | `{title, message, level: "info" \| "success" \| "warning"}` | тост в браузере. Нужен `userId` или `broadcast: true`, иначе событие уйдёт в DLQ |
 | `user.created`, `user.updated` | вход и сотрудники (`UsersService`) | `{id, name, role}` | фронт перечитывает список сотрудников |
-| `progress.updated` | геймификация (`GamificationService`), после записи прохождения в журнал | `{runId}` | фронт перечитывает уровень и репутацию |
-| `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читает геймификация: журнал для опыта, уровня и репутации |
+| `progress.updated` | геймификация (`GamificationService`), после записи прохождения в журнал | `{runId}` | фронт перечитывает уровень, репутацию, ачивки и награду в разборе |
+| `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, timedDecisions, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. `timedDecisions` — сколько решений было на время. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читает геймификация: журнал для опыта, уровня, репутации и ачивок |
 
 ## Ключи в Redis
 
