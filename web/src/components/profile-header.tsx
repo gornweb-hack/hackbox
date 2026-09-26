@@ -11,15 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type Me, useLogout } from "@/lib/auth";
 import { useProgress } from "@/lib/gamification";
-
-// «Екатерина Волкова» → «ЕВ», «Демо-сотрудник» → «ДС»
-function initials(name: string) {
-  return name
-    .split(/[\s-]+/)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? "")
-    .join("");
-}
+import { initials } from "@/lib/names";
 
 // Шапка над содержимым: кто вошёл, его уровень и бригада, уведомления.
 // Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар

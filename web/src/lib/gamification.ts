@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 
 export interface Level {
@@ -52,6 +52,29 @@ export interface Reward {
   achievements: Achievement[];
 }
 
+export type RatingScope = "crew" | "depot" | "company";
+
+export interface RatingRow {
+  place: number;
+  userId: string;
+  name: string;
+  xp: number;
+  isMe: boolean;
+}
+
+// Рейтинг за месяц (GET /api/gamification/rating?scope=…). Правила мест — в core/src/gamification/rating.ts
+export interface Rating {
+  scope: RatingScope;
+  // «Бригада 3», «Депо Москва-ВСМ», «Компания»; null — бригада или депо не назначены
+  title: string | null;
+  // «2026-09»
+  month: string;
+  items: RatingRow[];
+  total: number;
+  // null — вас нет в таблице: в этом месяце не было прохождений
+  me: { place: number; xp: number; gap: { place: number; xp: number } | null } | null;
+}
+
 // Всё из геймификации перечитывается по событию progress.updated (lib/events.tsx):
 // модуль записал прохождение, значит изменились и прогресс, и награда
 export const GAMIFICATION_KEY = ["gamification"] as const;
@@ -69,6 +92,16 @@ export function useReward(runId: string) {
   return useQuery({
     queryKey: [...GAMIFICATION_KEY, "reward", runId],
     queryFn: () => api<Reward>(`/api/gamification/runs/${runId}/reward`),
+  });
+}
+
+// Своё место перечитывается по progress.updated, чужие прохождения — при следующем открытии страницы.
+// При смене среза прежняя таблица видна, пока грузится новая, — карточка не мигает
+export function useRating(scope: RatingScope) {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "rating", scope],
+    queryFn: () => api<Rating>(`/api/gamification/rating?scope=${scope}`),
+    placeholderData: keepPreviousData,
   });
 }
 

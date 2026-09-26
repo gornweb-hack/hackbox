@@ -4,13 +4,14 @@ import { AchievementsCard } from "@/components/home/achievements-card";
 import { HeroCard } from "@/components/home/hero-card";
 import { LevelCard } from "@/components/home/level-card";
 import { NewScenarioBanner } from "@/components/home/new-scenario-banner";
+import { RatingCard } from "@/components/home/rating-card";
 import { ReputationCard } from "@/components/home/reputation-card";
 import { ScenariosCard } from "@/components/home/scenarios-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useScenarios } from "@/lib/scenarios";
 
 // Главная — табло прогресса и вход в следующую тренировку. Сетка 6 колонок на десктопе, как в макете:
-// главная карточка (4) и уровень (2), ниже репутация (2), сценарии (3) и ачивки (3). У каждой карточки свои загрузка и ошибка
+// главная карточка (4) и уровень (2), ниже репутация (2) и рейтинг (2), затем сценарии (3) и ачивки (3). У каждой карточки свои загрузка и ошибка
 export default function HomePage() {
   const { data: scenarios, isPending, isError } = useScenarios();
   // Плашка — только про новый сценарий, который ещё не пройден
@@ -37,6 +38,7 @@ export default function HomePage() {
       </div>
       <LevelCard className="lg:col-span-2" />
       <ReputationCard className="lg:col-span-2" />
+      <RatingCard className="lg:col-span-2" />
       {scenarios && scenarios.length > 0 && <ScenariosCard scenarios={scenarios} className="lg:col-span-3" />}
       <AchievementsCard className="lg:col-span-3" />
     </div>
