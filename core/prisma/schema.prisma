@@ -48,3 +48,41 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
+
+// ---------- gamification: опыт, уровни, ачивки, рейтинг ----------
+
+// Журнал прохождений — копия данных из scenario.completed. Опыт, уровень, репутация,
+// очки компетенций и рейтинг считаются из него при запросе, поэтому правка правил в YAML
+// сразу пересчитывает всех
+model GamificationRun {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  // Уникальность отсекает повторную доставку события
+  runId        String   @unique @map("run_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  scenarioId   String   @map("scenario_id")
+  category     String
+  outcome      String
+  loyalty      Int
+  safety       Int
+  timeouts     Int
+  // Очки по компетенциям за прохождение: {"acknowledge": 20, "safety": 15}
+  competencies Json
+  // Время из события, а не время записи: по нему считаются тренд за неделю и окно челленджа
+  completedAt  DateTime @map("completed_at") @db.Timestamptz(3)
+
+  @@index([userId, completedAt])
+  @@map("gamification_runs")
+}
+
+// Полученные ачивки хранятся, а не вычисляются: после правки порога в YAML они не пропадают,
+// а вставка показывает, что ачивка новая и о ней нужно уведомить один раз
+model GamificationAchievement {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  // id ачивки из YAML
+  achievementId String   @map("achievement_id")
+  earnedAt      DateTime @default(now()) @map("earned_at") @db.Timestamptz(3)
+
+  @@unique([userId, achievementId])
+  @@map("gamification_achievements")
+}
