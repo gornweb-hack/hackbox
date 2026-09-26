@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Создаёт роли и схемы для ядра и модулей. Запускается сервисом db-init при каждом
-# `docker compose up`: повторный запуск безопасен, новые модули из DB_MODULES
-# добавляются без потери данных, пароли синхронизируются с docker-compose.yml.
+# Создаёт роль ядра и отдаёт ей базу. Запускается сервисом db-init при каждом
+# `docker compose up`: повторный запуск безопасен, пароль синхронизируется с docker-compose.yml.
 set -euo pipefail
 
 export PGHOST="${PGHOST:-postgres}" PGUSER="$POSTGRES_USER" PGPASSWORD="$POSTGRES_PASSWORD" PGDATABASE="$POSTGRES_DB"
@@ -30,21 +29,5 @@ ALTER ROLE core_svc CREATEDB;
 ALTER DATABASE :"db" OWNER TO core_svc;
 SQL
 echo "db-init: ядро — роль core_svc, схема public"
-
-# Модули: своя схема <name> и роль <name>_svc, доступа к чужим схемам нет.
-modules="${DB_MODULES:-}"
-for name in ${modules//,/ }; do
-  if [[ ! $name =~ ^[a-z][a-z0-9_]*$ || $name == core || $name == public || $name == pg || $name == pg_* ]]; then
-    echo "db-init: недопустимое имя модуля '$name' (нужно ^[a-z][a-z0-9_]*$, нельзя core, public, pg, pg_*)" >&2
-    exit 1
-  fi
-
-  ensure_role "${name}_svc" "$MODULE_DB_PASSWORD"
-  sql -v schema="$name" -v role="${name}_svc" <<'SQL'
-CREATE SCHEMA IF NOT EXISTS :"schema" AUTHORIZATION :"role";
-ALTER ROLE :"role" SET search_path = :"schema";
-SQL
-  echo "db-init: модуль $name — роль ${name}_svc, схема $name"
-done
 
 echo "db-init: готово"
