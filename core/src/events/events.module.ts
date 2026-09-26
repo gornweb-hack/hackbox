@@ -4,11 +4,11 @@ import { EventsService } from './events.service.js';
 import { StreamController } from './stream.controller.js';
 
 // События: публикация в стрим events, чтение группой core и SSE /api/stream.
-// Глобальный: публиковать события может любой модуль
+// Глобальный: публиковать (EventsService) и подписываться (EventsConsumer.on) может любой модуль
 @Global()
 @Module({
   controllers: [StreamController],
   providers: [EventsService, EventsConsumer],
-  exports: [EventsService],
+  exports: [EventsService, EventsConsumer],
 })
 export class EventsModule {}
