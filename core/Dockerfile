@@ -10,8 +10,6 @@ RUN npm run build
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-# Запас потоков libuv: DNS-запросы к незапущенным модулям идут секундами и занимают поток
-ENV UV_THREADPOOL_SIZE=16
 COPY --from=build /app/package.json /app/prisma7.config.ts ./
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/node_modules ./node_modules

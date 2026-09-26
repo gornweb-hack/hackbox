@@ -29,6 +29,9 @@ model User {
   email         String?        @unique
   passwordHash  String         @map("password_hash")
   role          Role           @default(USER)
+  // Бригада и депо — по ним строится рейтинг («Бригада 3», «Депо Москва-ВСМ»)
+  crew          String?
+  depot         String?
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   refreshTokens RefreshToken[]
 
@@ -47,4 +50,70 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+// ---------- scenarios: прохождения сценариев ----------
+
+// Прохождение сценария сотрудником. Текущий узел и шкалы хранятся здесь,
+// поэтому прохождение переживает перезагрузку страницы и перезапуск ядра
+model ScenarioRun {
+  id          String             @id @default(uuid(7)) @db.Uuid
+  // Сотрудник — обычное поле без связи: модули не связываются друг с другом (docs/database.md)
+  userId      String             @map("user_id") @db.Uuid
+  // id сценария — имя файла в content/scenarios
+  scenarioId  String             @map("scenario_id")
+  nodeId      String             @map("node_id")
+  // Когда показан текущий узел: от этого момента сервер отсчитывает таймер
+  nodeShownAt DateTime           @map("node_shown_at") @db.Timestamptz(3)
+  loyalty     Int
+  safety      Int
+  // good, ok или bad; пока прохождение идёт — null
+  outcome     String?
+  startedAt   DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt  DateTime?          @map("finished_at") @db.Timestamptz(3)
+  decisions   ScenarioDecision[]
+
+  @@index([userId, finishedAt])
+  @@map("scenario_runs")
+}
+
+// Решение в прохождении: выбор варианта или истёкшее время. Тексты хранятся снимком,
+// поэтому разбор не ломается, если сценарий потом поправят
+model ScenarioDecision {
+  id           String      @id @default(uuid(7)) @db.Uuid
+  runId        String      @map("run_id") @db.Uuid
+  run          ScenarioRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId       String      @map("node_id")
+  // null — время вышло
+  choiceId     String?     @map("choice_id")
+  prompt       String
+  answer       String
+  review       String
+  loyaltyDelta Int         @map("loyalty_delta")
+  safetyDelta  Int         @map("safety_delta")
+  decidedAt    DateTime    @default(now()) @map("decided_at") @db.Timestamptz(3)
+
+  @@index([runId])
+  @@map("scenario_decisions")
+}
+
+// ---------- gamification: опыт, уровни, репутация ----------
+
+// Журнал завершённых прохождений — копия из события scenario.completed. Опыт, уровень и репутация
+// считаются из него при запросе, поэтому правка правил в content/gamification.yaml сразу пересчитывает всех
+model GamificationRun {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  // Повторная доставка события отсекается уникальным runId
+  runId      String   @unique @map("run_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  scenarioId String   @map("scenario_id")
+  // good, ok или bad
+  outcome    String
+  loyalty    Int
+  safety     Int
+  // Время из события, а не время записи: по нему считается тренд за неделю
+  finishedAt DateTime @map("finished_at") @db.Timestamptz(3)
+
+  @@index([userId, finishedAt])
+  @@map("gamification_runs")
 }

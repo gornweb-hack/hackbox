@@ -16,7 +16,7 @@ function cookieOptions(path: string): CookieOptions {
 
 function setSessionCookies(res: Response, session: Session): void {
   res.cookie(ACCESS_COOKIE, session.accessToken, cookieOptions('/'));
-  // Refresh-cookie уходит только на /api/auth, в запросы к модулям не попадает
+  // Refresh-cookie уходит только на /api/auth: остальные запросы его не несут
   res.cookie(REFRESH_COOKIE, session.refreshToken, cookieOptions('/api/auth'));
 }
 

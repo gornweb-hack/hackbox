@@ -1,38 +1,42 @@
 "use client";
 
-import { ModuleGate } from "@/components/module-gate";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ROLE_LABELS, useMe } from "@/lib/auth";
-import { useModules } from "@/lib/modules";
+import { HeroCard } from "@/components/home/hero-card";
+import { LevelCard } from "@/components/home/level-card";
+import { NewScenarioBanner } from "@/components/home/new-scenario-banner";
+import { ReputationCard } from "@/components/home/reputation-card";
+import { ScenariosCard } from "@/components/home/scenarios-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useScenarios } from "@/lib/scenarios";
 
-// Главная. На хакатоне сюда встают блоки модулей, каждый — в своём ModuleGate
+// Главная — табло прогресса и вход в следующую тренировку. Сетка 6 колонок на десктопе, как в макете:
+// главная карточка (4) и уровень (2), ниже репутация (2) и сценарии (3). У каждой карточки свои загрузка и ошибка
 export default function HomePage() {
-  const { data: me } = useMe();
-  const { data: modules } = useModules();
-  if (!me) return null;
+  const { data: scenarios, isPending, isError } = useScenarios();
+  // Плашка — только про новый сценарий, который ещё не пройден
+  const fresh = scenarios?.find((scenario) => scenario.isNew && !scenario.completed);
 
   return (
-    <>
-      <div>
-        <h1 className="text-2xl font-semibold">Здравствуйте, {me.name}</h1>
-        <p className="text-sm text-muted-foreground">{ROLE_LABELS[me.role]}</p>
+    <div className="grid gap-3 lg:grid-cols-6 lg:gap-5">
+      <div className="flex min-w-0 flex-col gap-2 lg:col-span-4">
+        {isPending ? (
+          <>
+            <Skeleton className="h-11 rounded-lg" />
+            <Skeleton className="h-72 rounded-xl" />
+          </>
+        ) : isError || scenarios.length === 0 ? (
+          <p className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">
+            {isError ? "Каталог сценариев недоступен. Обновите страницу чуть позже." : "Сценариев пока нет."}
+          </p>
+        ) : (
+          <>
+            {fresh && <NewScenarioBanner scenario={fresh} />}
+            <HeroCard scenarios={scenarios} />
+          </>
+        )}
       </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {modules?.map((module) => (
-          <Card key={module.name}>
-            <CardHeader>
-              <CardTitle>Модуль {module.name}</CardTitle>
-              <CardDescription>Пример блока, который виден только пока модуль жив</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ModuleGate name={module.name}>
-                <p className="text-sm">Здесь будет содержимое модуля {module.name}.</p>
-              </ModuleGate>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </>
+      <LevelCard className="lg:col-span-2" />
+      <ReputationCard className="lg:col-span-2" />
+      {scenarios && scenarios.length > 0 && <ScenariosCard scenarios={scenarios} className="lg:col-span-3" />}
+    </div>
   );
 }

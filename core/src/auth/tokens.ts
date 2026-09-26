@@ -18,7 +18,7 @@ export type TokenCheck =
   | { status: 'expired' }
   | { status: 'invalid' };
 
-// Ответы на проблемы с access-токеном — одинаковые для guard и прокси
+// Ответы AuthGuard на проблемы с access-токеном
 export const AUTH_FAILURES = {
   none: { code: 'UNAUTHORIZED', message: 'Нужно войти в систему' },
   expired: { code: 'TOKEN_EXPIRED', message: 'Токен истёк: обновите его через /api/auth/refresh' },

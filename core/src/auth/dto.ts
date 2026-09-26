@@ -38,6 +38,16 @@ export class CreateUserDto extends RegisterDto {
   @IsOptional()
   @IsIn(ROLES)
   role?: Role;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  crew?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  depot?: string;
 }
 
 export class UpdateUserDto {
@@ -59,4 +69,15 @@ export class UpdateUserDto {
   @MinLength(6)
   @MaxLength(128)
   password?: string;
+
+  // Пустая строка очищает бригаду или депо
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  crew?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  depot?: string;
 }

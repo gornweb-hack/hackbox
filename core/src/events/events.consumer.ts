@@ -8,6 +8,9 @@ import { createRedis } from './redis.js';
 
 type StreamEntry = [id: string, fields: string[] | null];
 
+// Обработчик события в модуле. Исключение означает «не обработано»: событие придёт снова
+export type EventHandler = (event: EventEnvelope) => Promise<void>;
+
 const GROUP = 'core';
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -19,9 +22,8 @@ export function entriesOf(reply: unknown): StreamEntry[] {
   return Array.isArray(pair[1]) ? (pair[1] as StreamEntry[]) : [];
 }
 
-// Читатель событий ядра (группа core). Это же образец алгоритма для хелперов Go и Python:
-// XREADGROUP → обработка → XACK; упавшие события — повтор через XPENDING + XCLAIM,
-// после maxAttempts попыток — в events:dlq
+// Читатель событий ядра (группа core): XREADGROUP → обработка → XACK;
+// упавшие события — повтор через XPENDING + XCLAIM, после maxAttempts попыток — в events:dlq
 @Injectable()
 export class EventsConsumer implements OnApplicationBootstrap, OnModuleDestroy {
   // Сюда попадают события для пользователей — их раздаёт SSE
@@ -32,8 +34,15 @@ export class EventsConsumer implements OnApplicationBootstrap, OnModuleDestroy {
   // Отдельное подключение: XREADGROUP с BLOCK занимает его на время ожидания
   private redis: Pick<Redis, 'call' | 'connect' | 'disconnect'> = createRedis('consumer', this.logger);
   private readonly lastErrors = new Map<string, string>();
+  private readonly handlers = new Map<string, EventHandler[]>();
   private running = false;
   private groupReady = false;
+
+  // Подписка модуля на события своего типа, обычно в onModuleInit модуля.
+  // Обработчик должен быть идемпотентным: при повторе он получит то же событие ещё раз
+  on(type: string, handler: EventHandler): void {
+    this.handlers.set(type, [...(this.handlers.get(type) ?? []), handler]);
+  }
 
   onApplicationBootstrap(): void {
     this.running = true;
@@ -48,12 +57,14 @@ export class EventsConsumer implements OnApplicationBootstrap, OnModuleDestroy {
     this.redis.disconnect();
   }
 
-  // Что ядро делает с событием. Бросить исключение = не подтвердить, событие повторится
-  handle(event: EventEnvelope): void {
+  // Что ядро делает с событием: отдаёт адресованное в SSE, затем вызывает обработчики модулей.
+  // Бросить исключение = не подтвердить, событие повторится
+  async handle(event: EventEnvelope): Promise<void> {
     if (event.type === 'notification.requested' && !event.userId && !event.broadcast) {
       throw new Error('notification.requested без userId и без broadcast: некому показывать');
     }
     if (event.userId || event.broadcast) this.deliveries.next(event);
+    for (const handler of this.handlers.get(event.type) ?? []) await handler(event);
   }
 
   private async run(): Promise<void> {
@@ -105,7 +116,7 @@ export class EventsConsumer implements OnApplicationBootstrap, OnModuleDestroy {
       return;
     }
     try {
-      this.handle(event);
+      await this.handle(event);
       await this.redis.call('XACK', EVENTS_STREAM, GROUP, id);
       this.lastErrors.delete(id);
     } catch (error) {

@@ -4,9 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { refreshSession } from "./api";
-import { type ModuleInfo, MODULES_KEY } from "./modules";
+import { PROGRESS_KEY } from "./gamification";
 
-// Событие из SSE /api/stream — конверт из контракта (docs/module-contract.md, раздел «События»)
+// Событие из SSE /api/stream — конверт события (docs/events.md)
 export interface AppEvent<T = unknown> {
   id?: string;
   type: string;
@@ -28,7 +28,7 @@ interface Notification {
 }
 
 // Одно подключение к /api/stream на всё приложение.
-// Уведомления → тосты, module.status → мгновенно обновить статусы, user.* → перечитать сотрудников.
+// Уведомления → тосты, user.* → перечитать сотрудников, progress.updated → перечитать уровень и репутацию.
 // При обрыве: закрыть, обновить сессию и переподключиться с паузой 1…10 с
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -45,13 +45,10 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
         const { title, message, level } = event.data as Notification;
         const show = level === "success" ? toast.success : level === "warning" ? toast.warning : toast.info;
         show(title ?? "Уведомление", { description: message });
-      } else if (event.type === "module.status") {
-        const change = event.data as Pick<ModuleInfo, "name" | "status">;
-        queryClient.setQueryData<ModuleInfo[]>(MODULES_KEY, (modules) =>
-          modules?.map((module) => (module.name === change.name ? { ...module, status: change.status } : module)),
-        );
       } else if (event.type.startsWith("user.")) {
         void queryClient.invalidateQueries({ queryKey: ["users"] });
+      } else if (event.type === "progress.updated") {
+        void queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
       }
       for (const listener of listeners.get(event.type) ?? []) listener(event);
     };

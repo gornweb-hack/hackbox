@@ -5,8 +5,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "hackbox",
-  description: "Шаблон команды Gornweb для хакатонов",
+  title: "Рейс 400",
+  description: "Тренажёр проводника ВСМ-400",
 };
 
 export const viewport: Viewport = {
