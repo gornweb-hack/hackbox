@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import type { Outcome, RunView } from "@/lib/runs";
 import { formatDelta } from "@/lib/scales";
+import { useCountUp } from "@/lib/use-count-up";
 import { cn } from "@/lib/utils";
 import { ScaleMeter } from "./scale-meter";
 
@@ -14,6 +17,10 @@ const OUTCOME_TITLES: Record<Outcome, string> = {
 
 // Разбор после финала: исход, итоговые шкалы и каждое решение с тем, что и почему повлияло на шкалы
 export function RunReport({ run }: { run: RunView }) {
+  // Итоговые шкалы набегают от нуля, решения появляются по одному — разбор читается сверху вниз
+  const loyalty = useCountUp(run.loyalty);
+  const safety = useCountUp(run.safety);
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <section className="flex flex-col gap-3 rounded-xl bg-hero px-5 pt-[22px] pb-5">
@@ -25,15 +32,19 @@ export function RunReport({ run }: { run: RunView }) {
       </section>
 
       <section className="grid gap-5 rounded-xl border bg-card p-5 shadow-card sm:grid-cols-2 sm:gap-8">
-        <ScaleMeter scale="loyalty" value={run.loyalty} />
-        <ScaleMeter scale="safety" value={run.safety} />
+        <ScaleMeter scale="loyalty" value={loyalty} />
+        <ScaleMeter scale="safety" value={safety} />
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold tracking-[-0.01em]">Ваши решения</h2>
         <ol className="flex flex-col gap-3">
           {run.decisions?.map((decision, index) => (
-            <li key={index} className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-card">
+            <li
+              key={index}
+              style={{ animationDelay: `${300 + index * 120}ms` }}
+              className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-card fill-mode-both motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2"
+            >
               <p className="text-[13px] text-muted-foreground">{decision.prompt}</p>
               <p className="text-[15px] font-medium">{decision.timedOut ? "Время вышло" : decision.answer}</p>
               <div className="flex flex-wrap gap-1.5">
