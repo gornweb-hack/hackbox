@@ -1,11 +1,28 @@
 "use client";
 
 import { StarIcon } from "lucide-react";
-import type { RunReward } from "@/lib/demo";
+import { ApiError } from "@/lib/api";
+import { type Reward, useReward } from "@/lib/gamification";
 import { useCountUp } from "@/lib/use-count-up";
 
+// Награда за прохождение из геймификации: опыт и ачивки, заработанные именно этим прохождением.
+// Пока ядро не обработало событие о финале, награды ещё нет — карточка ждёт progress.updated
+export function RunReward({ runId }: { runId: string }) {
+  const { data: reward, error } = useReward(runId);
+  if (reward) return <RewardCard reward={reward} />;
+  const pending = !error || (error instanceof ApiError && error.code === "REWARD_PENDING");
+  return (
+    <section className="flex flex-col gap-2 rounded-xl bg-hero px-5 py-5">
+      <span className="text-[15px] text-[#9aa3b2]">Награда за прохождение</span>
+      <p className="text-[17px] font-semibold text-white">
+        {pending ? "Награда ещё не начислена" : "Не удалось загрузить награду"}
+      </p>
+    </section>
+  );
+}
+
 // Награда за прохождение: опыт набегает, ачивки появляются по одной
-export function RewardCard({ reward }: { reward: RunReward }) {
+export function RewardCard({ reward }: { reward: Reward }) {
   const xp = useCountUp(reward.xp, 1000);
   return (
     <section className="flex flex-col gap-4 rounded-xl bg-hero px-5 pt-5 pb-5 motion-safe:animate-in motion-safe:fade-in fill-mode-both">

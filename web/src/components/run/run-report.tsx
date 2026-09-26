@@ -4,13 +4,11 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import type { Outcome, RunView } from "@/lib/runs";
-import { demoReward } from "@/lib/demo";
 import { formatDelta, type Tone } from "@/lib/scales";
-import { useScenarios } from "@/lib/scenarios";
 import { useCountUp } from "@/lib/use-count-up";
 import { cn } from "@/lib/utils";
 import { CarScene } from "./car-scene";
-import { RewardCard } from "./reward-card";
+import { RunReward } from "./reward-card";
 import { ScaleMeter } from "./scale-meter";
 import { ScreenFlash } from "./screen-flash";
 
@@ -28,8 +26,6 @@ export function RunReport({ run }: { run: RunView }) {
   // Итоговые шкалы набегают от нуля, решения появляются по одному — разбор читается сверху вниз
   const loyalty = useCountUp(run.loyalty);
   const safety = useCountUp(run.safety);
-  const { data: scenarios } = useScenarios();
-  const hasTimers = scenarios?.find((scenario) => scenario.id === run.scenarioId)?.hasTimers ?? false;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
@@ -73,7 +69,7 @@ export function RunReport({ run }: { run: RunView }) {
         </ol>
       </section>
 
-      <RewardCard reward={demoReward(run, hasTimers)} />
+      <RunReward runId={run.id} />
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link href={`/scenarios/${run.scenarioId}`} className={cn(buttonVariants(), "h-11 px-5 text-[15px]")}>
