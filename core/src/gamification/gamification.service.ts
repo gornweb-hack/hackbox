@@ -7,8 +7,10 @@ import type { EventEnvelope } from '../events/envelope.js';
 import { EventsConsumer } from '../events/events.consumer.js';
 import { EventsService } from '../events/events.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { UsersService } from '../users/users.service.js';
 import { type AchievementProgress, achievementsOfRun, earned, progressOf } from './achievements.js';
 import { type LevelState, levelFor, type Reputation, reputation, xpOf } from './progress.js';
+import { gapAbove, monthOf, monthStart, type RatingScope, type Standing, standings } from './rating.js';
 import { type Level, parseRules, type Rules } from './rules.js';
 
 // Что геймификации нужно из scenario.completed (docs/events.md)
@@ -55,6 +57,19 @@ export interface Reward {
   achievements: AchievementCard[];
 }
 
+// Рейтинг за месяц в бригаде, депо или компании. Правила мест — в rating.ts
+export interface Rating {
+  scope: RatingScope;
+  // «Бригада 3», «Депо Москва-ВСМ», «Компания»; null — сотруднику не назначены бригада или депо
+  title: string | null;
+  // «2026-09»
+  month: string;
+  items: (Standing & { isMe: boolean })[];
+  total: number;
+  // null — вошедшего нет в таблице: не проходил сценарии в этом месяце или не в штате
+  me: { place: number; xp: number; gap: { place: number; xp: number } | null } | null;
+}
+
 const card = ({ id, title, description }: AchievementCard): AchievementCard => ({ id, title, description });
 
 @Injectable()
@@ -65,6 +80,7 @@ export class GamificationService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly events: EventsService,
     private readonly consumer: EventsConsumer,
+    private readonly users: UsersService,
   ) {}
 
   onModuleInit(): void {
@@ -142,6 +158,33 @@ export class GamificationService implements OnModuleInit {
       levels: rules.levels,
       reputation: reputation(runs, rules.reputation.window, new Date()),
       achievements: this.summary(runs, rules),
+    };
+  }
+
+  // Штат — из модуля сотрудников, прохождения — из своего журнала: чужие таблицы не читаем
+  async rating(userId: string, scope: RatingScope, now = new Date()): Promise<Rating> {
+    const [rules, staff] = await Promise.all([this.rules(), this.users.listStaff()]);
+    const me = staff.find((member) => member.id === userId);
+    // Бригаду сравниваем вместе с депо: в разных депо названия бригад могут совпасть
+    const members =
+      scope === 'company'
+        ? staff
+        : me?.[scope]
+          ? staff.filter((member) => member.depot === me.depot && (scope === 'depot' || member.crew === me.crew))
+          : [];
+    const runs = await this.prisma.gamificationRun.findMany({
+      where: { userId: { in: members.map((member) => member.id) }, finishedAt: { gte: monthStart(now) } },
+      select: { userId: true, outcome: true, finishedAt: true },
+    });
+    const rows = standings(members, runs, rules);
+    const mine = rows.find((row) => row.userId === userId);
+    return {
+      scope,
+      title: scope === 'company' ? 'Компания' : (me?.[scope] ?? null),
+      month: monthOf(now),
+      items: rows.map((row) => ({ ...row, isMe: row.userId === userId })),
+      total: rows.length,
+      me: mine ? { place: mine.place, xp: mine.xp, gap: gapAbove(rows, mine.place) } : null,
     };
   }
 

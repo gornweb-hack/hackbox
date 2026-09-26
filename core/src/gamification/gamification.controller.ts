@@ -1,7 +1,8 @@
-import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard.js';
 import type { AuthUser } from '../auth/tokens.js';
-import { GamificationService, type Progress, type Reward } from './gamification.service.js';
+import { RatingQueryDto } from './dto.js';
+import { GamificationService, type Progress, type Rating, type Reward } from './gamification.service.js';
 
 @Controller('gamification')
 @UseGuards(AuthGuard)
@@ -18,5 +19,11 @@ export class GamificationController {
   @Get('runs/:runId/reward')
   reward(@CurrentUser() user: AuthUser, @Param('runId', ParseUUIDPipe) runId: string): Promise<Reward> {
     return this.gamification.reward(user.id, runId);
+  }
+
+  // Рейтинг за месяц: вся таблица бригады, депо или компании и место вошедшего
+  @Get('rating')
+  rating(@CurrentUser() user: AuthUser, @Query() query: RatingQueryDto): Promise<Rating> {
+    return this.gamification.rating(user.id, query.scope);
   }
 }
