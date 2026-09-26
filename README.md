@@ -105,6 +105,8 @@ docker compose exec redis redis-cli -a redis_pass --no-auth-warning XRANGE event
 
 Строка подключения: `postgres://<роль>:<пароль>@localhost:5432/app`. Из контейнеров вместо `localhost` — `postgres`.
 
+Как работать с базой без связей между схемами, миграции и отладка — в [памятке по базе данных](docs/database.md).
+
 ### Снимок базы перед демо
 
 ```bash
