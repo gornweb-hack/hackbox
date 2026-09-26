@@ -16,6 +16,7 @@ export interface SkillScore {
 export interface Skills {
   skills: SkillScore[];
   runs: number;
+  // null — навыки ещё не проверялись или все проверенные на 100%
   weakest: string | null;
   recommendation: { scenarioId: string } | null;
 }
@@ -32,6 +33,9 @@ export const ANALYTICS_KEY = ["analytics"] as const;
 export function useSkills() {
   return useQuery({ queryKey: [...ANALYTICS_KEY, "skills"], queryFn: () => api<Skills>("/api/analytics/me/skills") });
 }
+
+// Проверялся ли хоть один навык: до первого прохождения радар — заглушка
+export const anyTested = (skills: Skills) => skills.skills.some((skill) => skill.value !== null);
 
 export function trainingOf(skills: Skills | undefined): Training | null {
   const skill = skills?.skills.find((item) => item.id === skills.weakest);

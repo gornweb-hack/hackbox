@@ -15,6 +15,7 @@ nodes:
       а за пассажиром уже собирается очередь.
     choices:
       - id: clarify
+        action: ticket
         skills: [acknowledge, safety]
         text: >-
           «Позвольте уточнить, на каком ресурсе вы приобретали билет?» — и проверить номер заказа,
@@ -25,6 +26,7 @@ nodes:
           проверить номер заказа, дату и время отправления и уточнить, где куплен билет.
         to: fake-site
       - id: let-in
+        action: reach
         text: «Проходите, в пути разберёмся»
         effects: {loyalty: 15, safety: -25}
         review: >-
@@ -32,6 +34,7 @@ nodes:
           сейчас, но это нарушение, и разбираться всё равно придётся — уже в пути.
         to: onboard-check
       - id: refuse
+        action: point
         skills: [rule]
         text: «Билета нет — посадка невозможна. Отойдите, вы задерживаете людей»
         effects: {loyalty: -25, safety: 5}
@@ -47,6 +50,7 @@ nodes:
       «Мне срочно в Петербург, у меня важная встреча!»
     choices:
       - id: explain
+        action: point
         skills: [acknowledge, rule, solution]
         text: >-
           «Понимаю, что ситуация неприятная. Обращаю ваше внимание: билеты действительны, только
@@ -58,6 +62,7 @@ nodes:
           Пассажир понимает, что делать дальше.
         to: next-train
       - id: blame
+        action: shout
         text: «Сами виноваты — покупать надо на официальном сайте»
         effects: {loyalty: -20}
         review: >-
@@ -69,6 +74,7 @@ nodes:
             node: demands-chief
           - node: ok-end
       - id: sell-onboard
+        action: ticket
         text: «Садитесь, оформим билет у меня в вагоне»
         effects: {loyalty: 10, safety: -20}
         review: >-
@@ -80,6 +86,7 @@ nodes:
     text: «А если я не успею к отправлению?» — спрашивает пассажир.
     choices:
       - id: reassure
+        action: calm
         skills: [reassure]
         text: >-
           «Благодарю за понимание. Если не успеете, в кассе оформят билет на ближайший поезд.
@@ -89,6 +96,7 @@ nodes:
           Это шаг «заверить» из ролевой модели: пассажир уходит спокойным и с понятным планом.
         to: good-end
       - id: hold-train
+        action: radio
         text: «Бегите, я попрошу машиниста немного подождать»
         effects: {loyalty: 10, safety: -20}
         review: >-
@@ -96,6 +104,7 @@ nodes:
           обернётся разочарованием: давайте только достоверную информацию.
         to: ok-end
       - id: not-my-job
+        action: ignore
         text: «Это уже вопрос к кассе, а не ко мне»
         effects: {loyalty: -15}
         review: >-
@@ -109,6 +118,7 @@ nodes:
       растёт.
     choices:
       - id: call-chief
+        action: radio
         skills: [acknowledge, safety]
         text: >-
           «Понимаю ваше волнение. Сейчас приглашу начальника поезда, а вас попрошу пропустить
@@ -119,6 +129,7 @@ nodes:
           задерживают.
         to: ok-end
       - id: argue
+        action: shout
         text: Продолжить спорить у двери вагона
         effects: {loyalty: -15, safety: -15}
         review: >-
@@ -126,6 +137,7 @@ nodes:
           пригласите начальника поезда и продолжайте работу.
         to: bad-end
       - id: give-in
+        action: reach
         text: Пустить пассажира, лишь бы он успокоился
         effects: {loyalty: 10, safety: -25}
         review: >-

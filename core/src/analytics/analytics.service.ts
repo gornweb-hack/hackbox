@@ -12,7 +12,7 @@ export interface SkillsSummary {
   skills: SkillScore[];
   // По скольким последним прохождениям посчитано
   runs: number;
-  // id слабого навыка; null — ещё ни один навык не проверялся
+  // id слабого навыка; null — навыки ещё не проверялись или все проверенные на 100%
   weakest: string | null;
   // Сценарий, где слабый навык проверяется чаще всего
   recommendation: { scenarioId: string } | null;

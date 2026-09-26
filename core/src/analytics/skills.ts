@@ -86,10 +86,12 @@ export function skillScores(runs: SkillRun[], scripts: Map<string, Script>, skil
   });
 }
 
-// Слабый навык — с наименьшим процентом среди проверявшихся; при равенстве — первый по списку
+// Слабый навык — с наименьшим процентом среди проверявшихся, при равенстве — первый по списку.
+// Навык на 100% слабым не бывает: если все проверенные на 100%, тренировать нечего — null
 export function weakest(scores: SkillScore[]): SkillScore | null {
   return scores.reduce<SkillScore | null>(
-    (low, score) => (score.value !== null && (low === null || score.value < (low.value ?? 0)) ? score : low),
+    (low, score) =>
+      score.value !== null && score.value < 100 && (low === null || score.value < (low.value ?? 0)) ? score : low,
     null,
   );
 }

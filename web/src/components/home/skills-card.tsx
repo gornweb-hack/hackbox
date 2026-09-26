@@ -4,7 +4,7 @@ import { TargetIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type SkillScore, type Skills, trainingOf, useSkills } from "@/lib/analytics";
+import { anyTested, type SkillScore, type Skills, trainingOf, useSkills } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HomeCard } from "./home-card";
 
@@ -35,7 +35,7 @@ export function SkillsCard({ className }: { className?: string }) {
     <HomeCard title="Навыки" href="/profile#skills" linkLabel="Подробнее" className={className}>
       {isError ? (
         <p className="text-sm text-muted-foreground">Навыки недоступны. Обновите страницу чуть позже.</p>
-      ) : skills.weakest === null ? (
+      ) : !anyTested(skills) ? (
         <SkillsPlaceholder count={skills.skills.length} />
       ) : (
         <SkillsBody skills={skills} />
@@ -49,7 +49,8 @@ function SkillsBody({ skills }: { skills: Skills }) {
   const items = skills.skills;
   const n = items.length;
   const weakIndex = items.findIndex((skill) => skill.id === skills.weakest);
-  const [wx, wy] = point(weakIndex, n, (items[weakIndex].value ?? 0) / 100);
+  // Слабого навыка может не быть, если все проверенные на 100%
+  const weakPoint = weakIndex >= 0 ? point(weakIndex, n, (items[weakIndex].value ?? 0) / 100) : null;
   const training = trainingOf(skills);
   const chosen = items.find((skill) => skill.id === selected);
 
@@ -93,8 +94,12 @@ function SkillsBody({ skills }: { skills: Skills }) {
             return <circle key={skill.id} cx={x} cy={y} r={3} className="fill-primary" />;
           })}
           {/* Слабый навык: ореол и кольцо */}
-          <circle cx={wx} cy={wy} r={10} className="fill-primary" fillOpacity={0.16} />
-          <circle cx={wx} cy={wy} r={5} className="fill-card stroke-primary" strokeWidth={2.5} />
+          {weakPoint && (
+            <>
+              <circle cx={weakPoint[0]} cy={weakPoint[1]} r={10} className="fill-primary" fillOpacity={0.16} />
+              <circle cx={weakPoint[0]} cy={weakPoint[1]} r={5} className="fill-card stroke-primary" strokeWidth={2.5} />
+            </>
+          )}
         </svg>
         {items.map((skill, i) => {
           const angle = (-90 + (360 / n) * i) * (Math.PI / 180);

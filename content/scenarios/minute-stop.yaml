@@ -16,6 +16,7 @@ nodes:
       окно!» Поезд подходит к Твери, стоянка — одна минута.
     choices:
       - id: climate
+        action: radio
         skills: [acknowledge, rule, solution]
         text: >-
           «Понимаю, что вам некомфортно. Окна в поезде не открываются, но я сейчас передам
@@ -26,6 +27,7 @@ nodes:
           климата через бортинженера.
         to: platform
       - id: try-window
+        action: reach
         text: «Сейчас попробую открыть»
         effects: {loyalty: 5, safety: -10}
         review: >-
@@ -33,6 +35,7 @@ nodes:
           обманули. Сразу объясните техническую невозможность и предложите альтернативу.
         to: platform
       - id: ignore
+        action: ignore
         text: «Потерпите, скоро приедем»
         effects: {loyalty: -20}
         review: >-
@@ -54,6 +57,7 @@ nodes:
       to: left-behind
     choices:
       - id: warn
+        action: point
         skills: [rule]
         text: >-
           «Выйти можно под вашу ответственность: не отходите от вагона, стоянка одна минута.
@@ -64,6 +68,7 @@ nodes:
           далеко. Но за временем теперь следите вы.
         to: doors
       - id: tambour
+        action: reach
         skills: [solution, safety]
         text: «Предлагаю подышать в тамбуре у открытой двери — так вы точно не опоздаете к отправлению»
         effects: {loyalty: 15, safety: 20}
@@ -71,6 +76,7 @@ nodes:
           Лучший вариант: пассажирке легче, а риск остаться на платформе исключён.
         to: aftercare
       - id: forbid
+        action: point
         skills: [safety]
         text: «Выходить нельзя, вернитесь на место»
         effects: {loyalty: -20, safety: 10}
@@ -94,6 +100,7 @@ nodes:
       to: left-behind
     choices:
       - id: call-back
+        action: point
         skills: [safety]
         text: «Пожалуйста, пройдите в вагон — поезд отправляется!»
         effects: {loyalty: 5, safety: 15}
@@ -101,6 +108,7 @@ nodes:
           Вовремя: пассажирка вернулась, поезд ушёл по расписанию.
         to: aftercare
       - id: hold-door
+        action: reach
         text: Придержать дверь, пока она не вернётся
         effects: {loyalty: 10, safety: -25}
         review: >-
@@ -108,6 +116,7 @@ nodes:
           пассажирку нужно было заранее.
         to: delayed
       - id: go-fetch
+        action: reach
         text: Выйти за пассажиркой к киоску
         effects: {safety: -20}
         review: >-
@@ -119,6 +128,7 @@ nodes:
       Пассажирка возмущена: «Вы разговариваете со мной, как с ребёнком! Где книга жалоб?»
     choices:
       - id: accept-complaint
+        action: calm
         skills: [acknowledge, solution]
         text: >-
           «Конечно, вы можете оставить обращение, я подскажу, как это сделать. А пока позвольте
@@ -129,6 +139,7 @@ nodes:
           ситуацию прямо на борту.
         to: aftercare
       - id: brush-off
+        action: ignore
         text: «Жалобы пишите на сайте, я занят»
         effects: {loyalty: -15}
         review: >-
@@ -140,6 +151,7 @@ nodes:
     text: Поезд отправился. Пассажирке всё ещё душно, она нервничает.
     choices:
       - id: water-feedback
+        action: water
         skills: [reassure]
         text: >-
           Принести воды, а через десять минут уточнить: «Как вы себя чувствуете? Стало
@@ -150,6 +162,7 @@ nodes:
           интересоваться комфортом пассажира.
         to: good-end
       - id: move-seat
+        action: point
         skills: [solution]
         text: Предложить пересесть ближе к кондиционеру, если есть свободное место
         effects: {loyalty: 10}
@@ -157,6 +170,7 @@ nodes:
           Хорошая альтернатива из памятки. Не забудьте позже уточнить самочувствие.
         to: good-end
       - id: forget
+        action: ignore
         text: Вернуться к своим делам
         effects: {loyalty: -15}
         review: >-

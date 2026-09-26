@@ -14,6 +14,7 @@ nodes:
       у обоих одно и то же место, и оба уверены, что правы. Соседи оборачиваются.
     choices:
       - id: check-both
+        action: ticket
         skills: [acknowledge]
         text: «Давайте решим вопрос спокойно. Позвольте ваши билеты — я проверю оба»
         effects: {loyalty: 15, safety: 10}
@@ -22,6 +23,7 @@ nodes:
           проверить оба проездных документа.
         to: both-valid
       - id: first-come
+        action: point
         text: «Кто первый сел, тот и едет, а второму я найду другое место»
         effects: {loyalty: -15, safety: -5}
         review: >-
@@ -29,6 +31,7 @@ nodes:
           несправедливость, и спор разгорается.
         to: escalation
       - id: walk-away
+        action: ignore
         text: «Разберитесь, пожалуйста, между собой, я скоро подойду»
         effects: {loyalty: -20, safety: -15}
         review: >-
@@ -42,6 +45,7 @@ nodes:
       «Я заплатил за это место и никуда не уйду!»
     choices:
       - id: call-chief
+        action: radio
         skills: [acknowledge, solution]
         text: >-
           «Я вижу, что ситуация требует уточнения. Сейчас приглашу начальника поезда, он проверит
@@ -52,6 +56,7 @@ nodes:
           уточнит информацию о сбое у ответственных лиц.
         to: offer-seat
       - id: decide-alone
+        action: point
         text: Самому решить, кто из пассажиров останется на месте
         effects: {loyalty: -10, safety: -10}
         review: >-
@@ -59,6 +64,7 @@ nodes:
           он уточнит у ответственных лиц.
         to: escalation
       - id: promise-upgrade
+        action: reach
         text: «Не переживайте, я пересажу вас в Бизнес-класс»
         effects: {loyalty: 15, safety: -10}
         review: >-
@@ -79,6 +85,7 @@ nodes:
       to: bad-end
     choices:
       - id: separate
+        action: calm
         skills: [safety]
         text: >-
           Встать между пассажирами: «Прошу вас сохранять спокойствие. Я приглашаю начальника
@@ -92,6 +99,7 @@ nodes:
             node: security
           - node: offer-seat
       - id: threaten
+        action: shout
         text: «Прекратите немедленно, или вас высадят!»
         effects: {loyalty: -15, safety: -5}
         review: >-
@@ -99,6 +107,7 @@ nodes:
           прошу общаться корректно».
         to: security
       - id: radio-ptb
+        action: radio
         text: Вызвать по рации начальника поезда и сотрудников ПТБ, оставаясь в стороне
         effects: {loyalty: 5, safety: 10}
         review: >-
@@ -112,6 +121,7 @@ nodes:
       Начальник поезда просит вас помочь второму пассажиру.
     choices:
       - id: find-seat
+        action: reach
         skills: [solution, reassure]
         text: >-
           Найти свободное место в этом классе и проводить пассажира: «Благодарю вас за понимание
@@ -122,6 +132,7 @@ nodes:
           вагон спокойствие.
         to: ok-end
       - id: back-to-work
+        action: ignore
         text: Вернуться к обслуживанию — дальше разберутся без вас
         effects: {loyalty: -10}
         review: >-
@@ -135,6 +146,7 @@ nodes:
       и он разрешает пересадку без доплаты. Как предложить её второму пассажиру?
     choices:
       - id: offer-politely
+        action: calm
         skills: [solution, reassure]
         text: >-
           Отойти с пассажиром в сторону: «Приносим извинения за неудобства. Позвольте проводить
@@ -144,6 +156,7 @@ nodes:
           Решение из памятки и заверение. Пассажир уходит с ощущением заботы, а не уступки.
         to: good-end
       - id: order-move
+        action: point
         skills: [solution]
         text: «Переходите в Бизнес-класс, так решил начальник поезда»
         effects: {loyalty: -5}
@@ -152,6 +165,7 @@ nodes:
           поблагодарить за понимание.
         to: ok-end
       - id: ask-publicly
+        action: announce
         text: Спросить при всём вагоне, кто готов уступить место
         effects: {loyalty: -10, safety: -5}
         review: >-

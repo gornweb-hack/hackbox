@@ -21,6 +21,7 @@ nodes:
       to: worse
     choices:
       - id: call-chief
+        action: radio
         skills: [acknowledge, safety]
         text: >-
           Подойти: «Я рядом, сейчас приглашу начальника поезда и организуем помощь» — и вызвать
@@ -31,6 +32,7 @@ nodes:
           сразу подключили начальника поезда.
         to: medics
       - id: own-pills
+        action: pill
         text: Предложить пассажиру свою таблетку от давления
         effects: {loyalty: 5, safety: -30}
         review: >-
@@ -38,6 +40,7 @@ nodes:
           ляжет на вас. Действуйте через начальника поезда и медиков.
         to: worse
       - id: finish-service
+        action: ignore
         text: «Минуту, я закончу раздачу напитков и подойду»
         effects: {loyalty: -20, safety: -20}
         review: >-
@@ -51,6 +54,7 @@ nodes:
       телефон.
     choices:
       - id: chief-now
+        action: radio
         skills: [safety]
         text: Срочно вызвать начальника поезда по рации и остаться рядом с пассажиром
         effects: {loyalty: 10, safety: 15}
@@ -63,6 +67,7 @@ nodes:
             node: station
           - node: medics
       - id: window-water
+        action: water
         text: Принести воды и попробовать открыть окно, чтобы было больше воздуха
         effects: {loyalty: 5, safety: -10}
         review: >-
@@ -70,6 +75,7 @@ nodes:
           медики — вызывайте их немедленно.
         to: bad-end
       - id: ask-neighbours
+        action: point
         skills: [solution]
         text: Спросить у соседей, нет ли среди них врача
         effects: {loyalty: 5, safety: 5}
@@ -84,6 +90,7 @@ nodes:
       медиков. Соседи нервничают, одна пассажирка на грани паники.
     choices:
       - id: announce-calm
+        action: announce
         skills: [safety]
         text: >-
           Спокойно объявить: «Уважаемые пассажиры, если среди вас есть медицинский работник,
@@ -94,6 +101,7 @@ nodes:
           находят помощь.
         to: doctor
       - id: announce-panic
+        action: shout
         text: «Срочно! Человеку плохо, нужен врач, скорее!»
         effects: {loyalty: -10, safety: -10}
         review: >-
@@ -101,6 +109,7 @@ nodes:
           кого ищем и куда подойти.
         to: station
       - id: no-announce
+        action: ignore
         text: Не объявлять, чтобы не пугать пассажиров
         effects: {safety: -15}
         review: >-
@@ -114,6 +123,7 @@ nodes:
       к ближайшей станции. Пассажир спрашивает вас: «Со мной всё будет хорошо?»
     choices:
       - id: reassure
+        action: calm
         skills: [reassure]
         text: «Я рядом. Врач с вами, а на станции вас встретит бригада скорой помощи»
         effects: {loyalty: 15, safety: 5}
@@ -126,6 +136,7 @@ nodes:
             node: ok-end
           - node: good-end
       - id: diagnose
+        action: point
         text: «Конечно, это просто давление, скоро пройдёт»
         effects: {loyalty: 5, safety: -10}
         review: >-
@@ -133,6 +144,7 @@ nodes:
           рядом, на станции встретит скорая.
         to: ok-end
       - id: leave
+        action: ignore
         text: Вернуться к работе — врач ведь уже рядом
         effects: {loyalty: -15}
         review: >-
@@ -146,6 +158,7 @@ nodes:
       10 минут. Пассажиру по-прежнему плохо.
     choices:
       - id: stay-close
+        action: calm
         skills: [safety, reassure]
         text: Остаться рядом, следить за состоянием и заранее подготовить выход к бригаде скорой
         effects: {loyalty: 10, safety: 15}
@@ -153,6 +166,7 @@ nodes:
           Верно: пассажир не должен оставаться один, а выход к бригаде скорой готовят заранее.
         to: ok-end
       - id: kit-pills
+        action: pill
         text: Дать таблетки из поездной аптечки на своё усмотрение
         effects: {safety: -15}
         review: >-
@@ -160,6 +174,7 @@ nodes:
           начальника поезда и медиков.
         to: bad-end
       - id: hand-over
+        action: ignore
         text: Попросить соседей присмотреть за пассажиром и вернуться к обслуживанию
         effects: {loyalty: -15, safety: -10}
         review: >-

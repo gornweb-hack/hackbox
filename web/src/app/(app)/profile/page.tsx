@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type ReactNode, useEffect } from "react";
 import { EarnedTile, LockedTile } from "@/components/achievements/achievement-tiles";
 import { Skeleton } from "@/components/ui/skeleton";
-import { trainingOf, useSkills } from "@/lib/analytics";
+import { anyTested, trainingOf, useSkills } from "@/lib/analytics";
 import { formatXp, useProgress, useShelf } from "@/lib/gamification";
 import { type Outcome, OUTCOME_TITLES, useRunHistory } from "@/lib/runs";
 import { SCALE_TITLES } from "@/lib/scales";
@@ -76,7 +76,7 @@ function SkillsList() {
   const { data: skills, isPending, isError } = useSkills();
   if (isPending) return <Skeleton className="h-60 rounded-lg" />;
   if (isError) return <Unavailable what="Навыки" />;
-  if (skills.weakest === null) {
+  if (!anyTested(skills)) {
     return <p className="text-sm text-muted-foreground">Навыки появятся после первого сценария.</p>;
   }
   const training = trainingOf(skills);

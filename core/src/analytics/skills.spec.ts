@@ -100,6 +100,14 @@ describe('weakest — слабый навык', () => {
     expect(weakest(scores)?.id).toBe('a');
   });
 
+  it('все проверенные навыки на 100% — слабого нет', () => {
+    const scores = [
+      { id: 'a', title: 'А', value: 100, hits: 3, tests: 3 },
+      { id: 'b', title: 'Б', value: null, hits: 0, tests: 0 },
+    ];
+    expect(weakest(scores)).toBeNull();
+  });
+
   it('без проверок слабого навыка нет', () => {
     expect(weakest([{ id: 'a', title: 'А', value: null, hits: 0, tests: 0 }])).toBeNull();
   });

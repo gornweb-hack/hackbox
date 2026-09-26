@@ -23,7 +23,8 @@ export interface RunView {
     choices: { id: string; text: string }[];
     timer?: { seconds: number; remainingMs: number };
   };
-  last?: { answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number };
+  // action — жест проводника из YAML для анимации сцены; у варианта без жеста и при «время вышло» его нет
+  last?: { answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number; action?: string };
   outcome?: string;
   finalText?: string;
   decisions?: { prompt: string; answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number; review: string }[];
@@ -189,7 +190,14 @@ export class RunsService {
     };
     const last = run.decisions.at(-1);
     if (last) {
-      view.last = { answer: last.answer, timedOut: last.choiceId === null, loyaltyDelta: last.loyaltyDelta, safetyDelta: last.safetyDelta };
+      const action = scenario.script.nodes[last.nodeId]?.choices.find((choice) => choice.id === last.choiceId)?.action;
+      view.last = {
+        answer: last.answer,
+        timedOut: last.choiceId === null,
+        loyaltyDelta: last.loyaltyDelta,
+        safetyDelta: last.safetyDelta,
+        ...(action && { action }),
+      };
     }
 
     if (!run.finishedAt) {

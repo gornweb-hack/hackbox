@@ -1,26 +1,22 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 import { ANALYTICS_KEY } from "./analytics";
 import { refreshSession } from "./api";
 import { GAMIFICATION_KEY } from "./gamification";
 
 // Событие из SSE /api/stream — конверт события (docs/events.md)
-export interface AppEvent<T = unknown> {
+interface AppEvent {
   id?: string;
   type: string;
   source?: string;
   time?: string;
   userId?: string;
   broadcast?: boolean;
-  data: T;
+  data: unknown;
 }
-
-type Listener = (event: AppEvent) => void;
-
-const ListenersContext = createContext<Map<string, Set<Listener>> | null>(null);
 
 interface Notification {
   title?: string;
@@ -34,7 +30,6 @@ interface Notification {
 // При обрыве: закрыть, обновить сессию и переподключиться с паузой 1…10 с
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [listeners] = useState(() => new Map<string, Set<Listener>>());
 
   useEffect(() => {
     let source: EventSource | null = null;
@@ -54,7 +49,6 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
       } else if (event.type === "scenario.completed") {
         void queryClient.invalidateQueries({ queryKey: ANALYTICS_KEY });
       }
-      for (const listener of listeners.get(event.type) ?? []) listener(event);
     };
 
     const connect = () => {
@@ -90,28 +84,7 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
       clearTimeout(retryTimer);
       source?.close();
     };
-  }, [queryClient, listeners]);
+  }, [queryClient]);
 
-  return <ListenersContext.Provider value={listeners}>{children}</ListenersContext.Provider>;
-}
-
-// Подписка на события своего типа, например useEvent("points.awarded", () => refetch())
-export function useEvent<T = unknown>(type: string, handler: (event: AppEvent<T>) => void) {
-  const listeners = useContext(ListenersContext);
-  const handlerRef = useRef(handler);
-
-  useEffect(() => {
-    handlerRef.current = handler;
-  });
-
-  useEffect(() => {
-    if (!listeners) return;
-    const listener: Listener = (event) => handlerRef.current(event as AppEvent<T>);
-    const set = listeners.get(type) ?? new Set<Listener>();
-    set.add(listener);
-    listeners.set(type, set);
-    return () => {
-      set.delete(listener);
-    };
-  }, [listeners, type]);
+  return children;
 }

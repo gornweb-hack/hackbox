@@ -22,6 +22,8 @@ export interface Choice {
   to: Branch[];
   // Навыки ролевой модели, которые показывает этот вариант (content/skills.yaml): так узел проверяет навык
   skills: string[];
+  // Жест проводника в сцене прохождения (radio, water, announce…); список — в docs/content.md
+  action?: string;
 }
 
 export interface Timeout {
@@ -125,6 +127,7 @@ function parseNode(raw: Fields, where: string): ScenarioNode {
       review: requireText(item, 'review', at),
       to: parseTransition(item.to, at),
       skills: parseSkills(item.skills, at),
+      ...(item.action !== undefined && { action: requireText(item, 'action', at) }),
     };
   });
   const ids = choices.map((choice) => choice.id);

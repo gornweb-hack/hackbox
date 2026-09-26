@@ -36,6 +36,17 @@ describe('parseScript', () => {
     expect(script.nodes.done).toEqual({ text: 'Помогли', choices: [], final: 'good' });
   });
 
+  it('жест и метки навыков у варианта — необязательные', () => {
+    const script = parseScript(parse(valid.replace('to: done}', 'to: done, action: radio, skills: [safety]}')));
+    expect(script.nodes.ask.choices[0]).toMatchObject({ action: 'radio', skills: ['safety'] });
+    expect(script.nodes.ask.choices[1]).not.toHaveProperty('action');
+    expect(script.nodes.ask.choices[1].skills).toEqual([]);
+  });
+
+  it('жест — непустой текст', () => {
+    expect(broken('to: done}', "to: done, action: ''}")).toThrow('нет поля action');
+  });
+
   it('start ведёт в несуществующий узел', () => {
     expect(broken('start: ask', 'start: nowhere')).toThrow('start ведёт в несуществующий узел «nowhere»');
   });
