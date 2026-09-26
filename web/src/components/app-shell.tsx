@@ -18,7 +18,7 @@ interface NavItem {
   roles?: Role[];
 }
 
-// Пункты меню. Модули на хакатоне добавляют сюда свои разделы
+// Пункты меню; roles — кому пункт виден
 const NAV: NavItem[] = [
   { href: "/", label: "Главная" },
   { href: "/admin", label: "Администрирование", roles: ["ADMIN"] },

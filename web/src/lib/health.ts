@@ -3,30 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, ApiError } from "./api";
 
-export type ModuleStatus = "up" | "down";
-
-export interface ModuleInfo {
-  name: string;
-  status: ModuleStatus;
-  checkedAt: string | null;
-}
-
-export const MODULES_KEY = ["modules"] as const;
 export const HEALTH_KEY = ["health"] as const;
-
-// Статусы модулей: опрос раз в 15 с, а между опросами — мгновенно по SSE module.status (events.tsx)
-export function useModules() {
-  return useQuery({
-    queryKey: MODULES_KEY,
-    queryFn: () => api<ModuleInfo[]>("/api/modules"),
-    refetchInterval: 15_000,
-  });
-}
-
-export function useModuleStatus(name: string): ModuleStatus | "unknown" {
-  const { data } = useModules();
-  return data?.find((module) => module.name === name)?.status ?? "unknown";
-}
 
 export interface Health {
   core: "up" | "down";

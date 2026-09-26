@@ -80,7 +80,7 @@ function send(path: string, { method = "GET", body, signal }: RequestOptions): P
   });
 }
 
-// Ошибки ядра и модулей приходят в формате контракта {code, message}
+// Ошибки ядра приходят в формате {code, message}
 async function toError(res: Response): Promise<ApiError> {
   try {
     const body = (await res.json()) as { code?: string; message?: string };
