@@ -1,21 +1,16 @@
 "use client";
 
-import { ClockIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import Link from "next/link";
+import { ScenarioTags } from "@/components/scenario-tags";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { classLabel, type Scenario, useScenarios } from "@/lib/scenarios";
+import { groupByCategory, type Scenario, useScenarios } from "@/lib/scenarios";
 
 // Каталог сценариев по категориям. Категории идут в порядке первого сценария в них
 export default function ScenariosPage() {
   const { data: scenarios, isPending, isError } = useScenarios();
-
-  const groups = new Map<string, { title: string; items: Scenario[] }>();
-  for (const scenario of scenarios ?? []) {
-    const group = groups.get(scenario.category.id) ?? { title: scenario.category.title, items: [] };
-    group.items.push(scenario);
-    groups.set(scenario.category.id, group);
-  }
+  const groups = groupByCategory(scenarios ?? []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,11 +26,11 @@ export default function ScenariosPage() {
         </div>
       ) : isError ? (
         <p className="text-sm text-muted-foreground">Каталог сценариев недоступен. Обновите страницу чуть позже.</p>
-      ) : groups.size === 0 ? (
+      ) : groups.length === 0 ? (
         <p className="text-sm text-muted-foreground">Сценариев пока нет.</p>
       ) : (
-        [...groups].map(([id, group]) => (
-          <section key={id} className="flex flex-col gap-3">
+        groups.map((group) => (
+          <section key={group.id} className="flex flex-col gap-3">
             <h2 className="text-base font-semibold tracking-[-0.01em]">{group.title}</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {group.items.map((scenario) => (
@@ -57,16 +52,19 @@ function ScenarioCard({ scenario }: { scenario: Scenario }) {
     >
       <div className="flex items-start justify-between gap-3">
         <span className="text-base font-semibold tracking-[-0.01em]">{scenario.title}</span>
-        {scenario.isNew && <Badge className="h-[18px] shrink-0 rounded-sm px-1.5 text-[11px] font-semibold">Новый</Badge>}
+        {scenario.isNew && !scenario.completed && (
+          <Badge className="h-[18px] shrink-0 rounded-sm px-1.5 text-[11px] font-semibold">Новый</Badge>
+        )}
+        {scenario.completed && (
+          <span className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-primary-text">
+            <CheckIcon className="size-4" />
+            Пройден
+          </span>
+        )}
       </div>
       <p className="text-sm text-muted-foreground">{scenario.summary}</p>
-      <div className="mt-auto flex flex-wrap gap-1.5">
-        <Badge variant="outline" className="h-7 px-2.5 text-[13px] font-normal text-muted-foreground">
-          {classLabel(scenario.carClass)}
-        </Badge>
-        <Badge variant="outline" className="h-7 gap-1.5 px-2.5 text-[13px] font-normal text-muted-foreground [&>svg]:size-3.5!">
-          <ClockIcon />~{scenario.durationMin} мин
-        </Badge>
+      <div className="mt-auto">
+        <ScenarioTags scenario={scenario} tone="light" withCategory={false} />
       </div>
     </Link>
   );
