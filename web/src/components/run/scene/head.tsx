@@ -12,7 +12,8 @@ export type Neckline =
   | { kind: "turtle" }
   | { kind: "pearls" }
   | { kind: "open" }
-  | { kind: "scarf"; color: string };
+  | { kind: "scarf"; color: string }
+  | { kind: "stethoscope" };
 
 export interface Look {
   skinLight: string;
@@ -36,6 +37,17 @@ export const LOOKS = {
     hat: { kind: "pilotka", color: "#23406b", accent: "#2a9d8f" },
     neck: { kind: "scarf", color: "#2a9d8f" },
   },
+  // Начальник поезда Синицын: фуражка с золотой кокардой
+  chief: {
+    skinLight: "#f3c9a6",
+    skinShade: "#e2b08a",
+    hair: "#9a9a9a",
+    style: "short",
+    hat: { kind: "cap", color: "#18253d", accent: "#e0b44a" },
+    neck: { kind: "shirt", tie: "#233553" },
+  },
+  // Врач Белова, пассажирка поезда: каре, очки, стетоскоп
+  doctor: { skinLight: "#f7d8c0", skinShade: "#e9c2a4", hair: "#8c4a2f", style: "bob", glasses: true, neck: { kind: "stethoscope" } },
   // Сотрудник ПТБ Горчаков: чёрная фуражка
   guard: { skinLight: "#eec39c", skinShade: "#d9a67c", hair: "#2b211c", style: "short", hat: { kind: "cap", color: "#1b1d22", accent: "#c9892f" }, neck: { kind: "shirt", tie: "#8a2b2b" } },
   // Пожилой пассажир Серов: лысина, очки, морщины

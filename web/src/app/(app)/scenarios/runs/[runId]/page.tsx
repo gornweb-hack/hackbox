@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { hasNovel } from "@/components/run/novel/cast";
+import { NovelPlayer } from "@/components/run/novel/novel-player";
 import { RunPlayer } from "@/components/run/run-player";
 import { RunReport } from "@/components/run/run-report";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,5 +38,7 @@ export default function RunPage() {
     );
   }
 
-  return run.status === "finished" ? <RunReport run={run} /> : <RunPlayer run={run} />;
+  if (run.status === "finished") return <RunReport run={run} />;
+  // Сценарий с постановкой новеллы играется в ней, остальные — в обычном плеере
+  return hasNovel(run.scenarioId) ? <NovelPlayer run={run} /> : <RunPlayer run={run} />;
 }

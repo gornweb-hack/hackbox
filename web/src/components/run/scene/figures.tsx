@@ -17,8 +17,8 @@ export function shade(hex: string, amount = 0.18) {
   return `rgb(${channel(16)} ${channel(8)} ${channel(0)})`;
 }
 
-// Ворот у верхнего края туловища: x — центр, top — линия плеч
-function Collar({ x, top, neck, coat, skin }: { x: number; top: number; neck: Neckline; coat: string; skin: string }) {
+// Ворот у верхнего края туловища: x — центр, top — линия плеч. Им же пользуется бюст новеллы
+export function Collar({ x, top, neck, coat, skin }: { x: number; top: number; neck: Neckline; coat: string; skin: string }) {
   switch (neck.kind) {
     case "shirt":
       return (
@@ -41,6 +41,14 @@ function Collar({ x, top, neck, coat, skin }: { x: number; top: number; neck: Ne
       );
     case "open":
       return <path d={`M${x - 4.5} ${top} L${x} ${top + 8} L${x + 4.5} ${top} Z`} fill={skin} />;
+    case "stethoscope":
+      return (
+        <g>
+          <path d={`M${x - 4.5} ${top} L${x} ${top + 8} L${x + 4.5} ${top} Z`} fill={skin} />
+          <path d={`M${x - 6} ${top + 1} Q${x - 7} ${top + 11} ${x - 1} ${top + 13} M${x + 6} ${top + 1} Q${x + 7} ${top + 11} ${x + 1} ${top + 13}`} stroke="#3c4250" strokeWidth="1.3" fill="none" />
+          <circle cx={x} cy={top + 14} r="1.8" fill="#9aa3ad" />
+        </g>
+      );
     case "scarf":
       return (
         <g>
