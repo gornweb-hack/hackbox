@@ -71,6 +71,7 @@ docker compose up -d --build
 | Эндпоинт | Кто | Что делает |
 |---|---|---|
 | `GET /api/scenarios` | вошедший | каталог `{items, total}` по порядку; сценарий — `{id, title, summary, category: {id, title}, carClass, durationMin, order, isNew, hasTimers, completed}`, где `completed` — вошедший хоть раз дошёл до финала |
+| `GET /api/scenarios/runs` | вошедший | свои завершённые прохождения, новые первыми (до 50): `{items: [{id, scenarioId, title, outcome, loyalty, safety, finishedAt}], total}`; `title: null` — сценарий убран из каталога. История в профиле |
 | `POST /api/scenarios/runs` `{scenarioId}` | вошедший | начать прохождение: `201` и его состояние |
 | `GET /api/scenarios/runs/:id` | владелец прохождения | состояние: текущий узел с вариантами и таймером (`remainingMs` считает сервер), шкалы `loyalty` и `safety`, последнее решение. После финала — исход, текст финала и разбор `decisions` |
 | `POST /api/scenarios/runs/:id/choices` `{choiceId?}` | владелец прохождения | решение в текущем узле; без `choiceId` — «время вышло». Выбор после дедлайна засчитывается как истёкшее время |
@@ -91,6 +92,7 @@ docker compose up -d --build
 | Эндпоинт | Кто | Что делает |
 |---|---|---|
 | `GET /api/gamification/me/progress` | вошедший | `{xp, lastRunXp, level, next, progress, levels, reputation, achievements}`: опыт, текущий и следующий уровень, доля пути к нему, шкала уровней и репутация — среднее итоговых `loyalty` и `safety` за последние прохождения с изменением за неделю (`null`, пока прохождений нет). `achievements` — `{earned, total, latest, next}`: сколько ачивок получено, последняя (`isNew` — получена последним прохождением) и следующая с прогрессом `share` 0–1 и подписью `text` (оба `null`, если промежуточного прогресса нет) |
+| `GET /api/gamification/me/achievements` | вошедший | полка профиля: `{items: [{id, title, description, earnedAt, share, text}], total}` — все ачивки в порядке YAML; у полученных `earnedAt` — дата прохождения, на котором условие выполнилось, у закрытых — прогресс как у «Следующей» |
 | `GET /api/gamification/runs/:runId/reward` | вошедший, своё прохождение | `{xp, achievements: [{id, title, description}]}`: опыт за прохождение и ачивки, полученные именно им. `404 REWARD_PENDING` — прохождения нет в журнале: событие ещё не обработано или прохождение было до запуска геймификации |
 | `GET /api/gamification/rating?scope=crew\|depot\|company` | вошедший | `{scope, title, month, items: [{place, userId, name, xp, isMe}], total, me}`: таблица своей бригады, своего депо или всей компании за текущий месяц. `me` — `{place, xp, gap}`, где `gap` — `{place, xp}` до места выше (`null` у первого); `me: null`, если в этом месяце прохождений не было. Другой `scope` — `422 VALIDATION_ERROR` |
 

@@ -46,6 +46,14 @@ export interface Progress {
   achievements: AchievementsSummary;
 }
 
+// Ачивка на полке профиля (GET /api/gamification/me/achievements)
+export interface ShelfItem extends Achievement {
+  // Когда получена; null — ещё закрыта, тогда share и text — прогресс как у «Следующей»
+  earnedAt: string | null;
+  share: number | null;
+  text: string | null;
+}
+
 // Награда за одно прохождение (GET /api/gamification/runs/:runId/reward) — для разбора
 export interface Reward {
   xp: number;
@@ -83,6 +91,13 @@ export function useProgress() {
   return useQuery({
     queryKey: [...GAMIFICATION_KEY, "progress"],
     queryFn: () => api<Progress>("/api/gamification/me/progress"),
+  });
+}
+
+export function useShelf() {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "shelf"],
+    queryFn: () => api<{ items: ShelfItem[]; total: number }>("/api/gamification/me/achievements"),
   });
 }
 

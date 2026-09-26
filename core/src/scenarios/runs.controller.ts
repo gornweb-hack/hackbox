@@ -2,12 +2,18 @@ import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards 
 import { AuthGuard, CurrentUser } from '../auth/auth.guard.js';
 import type { AuthUser } from '../auth/tokens.js';
 import { ChooseDto, StartRunDto } from './dto.js';
-import { type RunView, RunsService } from './runs.service.js';
+import { type RunSummary, type RunView, RunsService } from './runs.service.js';
 
 @Controller('scenarios/runs')
 @UseGuards(AuthGuard)
 export class RunsController {
   constructor(private readonly runs: RunsService) {}
+
+  // Свои завершённые прохождения, новые первыми, — история в профиле
+  @Get()
+  history(@CurrentUser() user: AuthUser): Promise<{ items: RunSummary[]; total: number }> {
+    return this.runs.history(user.id);
+  }
 
   @Post()
   start(@CurrentUser() user: AuthUser, @Body() dto: StartRunDto): Promise<RunView> {

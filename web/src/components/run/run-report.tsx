@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import type { Outcome, RunView } from "@/lib/runs";
+import { type Outcome, OUTCOME_TITLES, type RunView } from "@/lib/runs";
 import { formatDelta, type Tone } from "@/lib/scales";
 import { useCountUp } from "@/lib/use-count-up";
 import { cn } from "@/lib/utils";
@@ -11,12 +11,6 @@ import { CarScene } from "./car-scene";
 import { RunReward } from "./reward-card";
 import { ScaleMeter } from "./scale-meter";
 import { ScreenFlash } from "./screen-flash";
-
-const OUTCOME_TITLES: Record<Outcome, string> = {
-  good: "Отлично справились",
-  ok: "Справились с замечаниями",
-  bad: "Ситуация вышла из-под контроля",
-};
 
 // Исход вспыхивает на экране: хороший — зелёным, плохой — красным, «с замечаниями» — без вспышки
 const OUTCOME_TONES: Record<Outcome, Tone> = { good: "good", ok: "neutral", bad: "bad" };

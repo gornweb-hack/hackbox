@@ -6,6 +6,13 @@ import { SCENARIOS_KEY } from "./scenarios";
 
 export type Outcome = "good" | "ok" | "bad";
 
+// Исход — в разборе и в истории профиля
+export const OUTCOME_TITLES: Record<Outcome, string> = {
+  good: "Отлично справились",
+  ok: "Справились с замечаниями",
+  bad: "Ситуация вышла из-под контроля",
+};
+
 export interface Decision {
   prompt: string;
   answer: string;
@@ -38,7 +45,25 @@ export interface RunView {
   decisions?: Decision[];
 }
 
+// Строка истории в профиле (GET /api/scenarios/runs)
+export interface RunSummary {
+  id: string;
+  scenarioId: string;
+  // null — сценарий убрали из каталога
+  title: string | null;
+  outcome: Outcome;
+  loyalty: number;
+  safety: number;
+  finishedAt: string;
+}
+
 export const runKey = (runId: string) => ["runs", runId] as const;
+const HISTORY_KEY = ["runs", "history"] as const;
+
+// Свои завершённые прохождения, новые первыми
+export function useRunHistory() {
+  return useQuery({ queryKey: HISTORY_KEY, queryFn: () => api<{ items: RunSummary[]; total: number }>("/api/scenarios/runs") });
+}
 
 export function useRun(runId: string) {
   return useQuery({ queryKey: runKey(runId), queryFn: () => api<RunView>(`/api/scenarios/runs/${runId}`) });
@@ -60,8 +85,11 @@ export function useChoose(runId: string) {
       api<RunView>(`/api/scenarios/runs/${runId}/choices`, { method: "POST", body: choiceId ? { choiceId } : {} }),
     onSuccess: (run) => {
       queryClient.setQueryData(runKey(runId), run);
-      // Главная и каталог должны увидеть, что сценарий пройден
-      if (run.status === "finished") void queryClient.invalidateQueries({ queryKey: SCENARIOS_KEY });
+      // Главная, каталог и история в профиле должны увидеть, что сценарий пройден
+      if (run.status === "finished") {
+        void queryClient.invalidateQueries({ queryKey: SCENARIOS_KEY });
+        void queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
+      }
     },
   });
 }

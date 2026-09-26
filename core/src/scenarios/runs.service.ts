@@ -29,6 +29,21 @@ export interface RunView {
   decisions?: { prompt: string; answer: string; timedOut: boolean; loyaltyDelta: number; safetyDelta: number; review: string }[];
 }
 
+// Строка истории в профиле: чем закончилось прохождение и со сколькими баллами шкал
+export interface RunSummary {
+  id: string;
+  scenarioId: string;
+  // null — сценарий убрали из каталога
+  title: string | null;
+  outcome: string;
+  loyalty: number;
+  safety: number;
+  finishedAt: Date;
+}
+
+// Сколько последних прохождений показывать в истории
+const HISTORY_LIMIT = 50;
+
 const withDecisions = { decisions: { orderBy: { decidedAt: 'asc' } } } as const;
 
 @Injectable()
@@ -90,6 +105,30 @@ export class RunsService {
       distinct: ['scenarioId'],
     });
     return new Set(runs.map((run) => run.scenarioId));
+  }
+
+  // История для профиля: завершённые прохождения, новые первыми
+  async history(userId: string): Promise<{ items: RunSummary[]; total: number }> {
+    const [catalog, runs] = await Promise.all([
+      this.scenarios.catalog(),
+      this.prisma.scenarioRun.findMany({
+        where: { userId, finishedAt: { not: null } },
+        orderBy: { finishedAt: 'desc' },
+        take: HISTORY_LIMIT,
+      }),
+    ]);
+    const titles = new Map(catalog.map(({ meta }) => [meta.id, meta.title]));
+    const items = runs.map((run) => ({
+      id: run.id,
+      scenarioId: run.scenarioId,
+      title: titles.get(run.scenarioId) ?? null,
+      // В выборке только завершённые прохождения: исход и дата финала у них есть
+      outcome: run.outcome!,
+      loyalty: run.loyalty,
+      safety: run.safety,
+      finishedAt: run.finishedAt!,
+    }));
+    return { items, total: items.length };
   }
 
   // Последние завершённые прохождения с решениями — для аналитики навыков, новые первыми

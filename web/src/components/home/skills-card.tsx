@@ -32,7 +32,7 @@ export function SkillsCard({ className }: { className?: string }) {
   if (isPending) return <Skeleton className={cn("h-[460px] rounded-xl", className)} />;
 
   return (
-    <HomeCard title="Навыки" href="/profile" linkLabel="Подробнее" className={className}>
+    <HomeCard title="Навыки" href="/profile#skills" linkLabel="Подробнее" className={className}>
       {isError ? (
         <p className="text-sm text-muted-foreground">Навыки недоступны. Обновите страницу чуть позже.</p>
       ) : skills.weakest === null ? (

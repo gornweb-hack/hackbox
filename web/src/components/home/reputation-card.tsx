@@ -24,7 +24,7 @@ export function ReputationCard({ className }: { className?: string }) {
   const reputation = progress?.reputation;
 
   return (
-    <HomeCard title="Репутация" href="/profile" linkLabel="История" className={className}>
+    <HomeCard title="Репутация" href="/profile#history" linkLabel="История" className={className}>
       {isError ? (
         <p className="text-sm text-muted-foreground">Репутация недоступна. Обновите страницу чуть позже.</p>
       ) : reputation ? (

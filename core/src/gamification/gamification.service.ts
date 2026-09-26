@@ -51,6 +51,12 @@ export interface Progress extends LevelState {
   achievements: AchievementsSummary;
 }
 
+// Ачивка на полке профиля: полученная — с датой, закрытая — с прогрессом
+export interface ShelfItem extends AchievementCard, AchievementProgress {
+  // Когда получена: дата прохождения, на котором условие выполнилось; null — ещё закрыта
+  earnedAt: Date | null;
+}
+
 // Награда за одно прохождение — для разбора
 export interface Reward {
   xp: number;
@@ -186,6 +192,19 @@ export class GamificationService implements OnModuleInit {
       total: rows.length,
       me: mine ? { place: mine.place, xp: mine.xp, gap: gapAbove(rows, mine.place) } : null,
     };
+  }
+
+  // Все ачивки в порядке YAML: полученные с датой, закрытые с прогрессом, как у «Следующей» на главной
+  async shelf(userId: string): Promise<{ items: ShelfItem[]; total: number }> {
+    const rules = await this.rules();
+    const runs = await this.journal(userId);
+    const got = new Map(earned(runs, rules.achievements).map((item) => [item.achievement.id, item.run.finishedAt]));
+    const items = rules.achievements.map((achievement) => {
+      const earnedAt = got.get(achievement.id) ?? null;
+      const progress = earnedAt ? { share: null, text: null } : progressOf(achievement, runs);
+      return { ...card(achievement), ...progress, earnedAt };
+    });
+    return { items, total: items.length };
   }
 
   // Опыт и ачивки именно за это прохождение. Пока событие не обработано, награды ещё нет
