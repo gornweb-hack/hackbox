@@ -11,7 +11,8 @@ import { TokensService } from './tokens.js';
 
 // Вход и сотрудники — один модуль: вход и демо-аккаунты работают через UsersService,
 // а эндпоинты сотрудников закрыты AuthGuard, поэтому раздельные модули ссылались бы друг на друга.
-// Глобальный: AuthGuard нужен контроллерам любого модуля, а ему — TokensService
+// Глобальный: AuthGuard нужен контроллерам любого модуля, а ему — TokensService.
+// UsersService открыт другим модулям для чтения: штат для рейтинга и демо-истории
 @Global()
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { TokensService } from './tokens.js';
   ],
   controllers: [AuthController, UsersController],
   providers: [TokensService, AuthGuard, AuthService, UsersService, SeedService],
-  exports: [TokensService],
+  exports: [TokensService, UsersService],
 })
 export class AuthModule {}

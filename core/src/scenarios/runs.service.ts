@@ -7,7 +7,7 @@ import type { Scenario } from './catalog.js';
 import { applyChoice, applyTimeout, currentNode, resolveAction, startState, timerState } from './engine.js';
 import { ScenariosService } from './scenarios.service.js';
 
-type RunWithDecisions = ScenarioRun & { decisions: ScenarioDecision[] };
+export type RunWithDecisions = ScenarioRun & { decisions: ScenarioDecision[] };
 
 // Прохождение для фронта: текущий узел и шкалы, последнее решение, после финала — разбор
 export interface RunView {
@@ -99,8 +99,9 @@ export class RunsService {
     return run;
   }
 
-  // Публикуется после коммита в базу (docs/events.md). Прочитают геймификация и аналитика, браузер получит по SSE
-  private async publishCompleted(scenario: Scenario, run: RunWithDecisions): Promise<void> {
+  // Публикуется после коммита в базу (docs/events.md): для живого прохождения и для демо-истории.
+  // Его читает геймификация, браузер получает по SSE
+  async publishCompleted(scenario: Scenario, run: RunWithDecisions): Promise<void> {
     const finishedAt = run.finishedAt ?? new Date();
     await this.events.publish(
       'scenario.completed',
