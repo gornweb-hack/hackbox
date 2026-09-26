@@ -10,10 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type Me, useLogout } from "@/lib/auth";
-import type { ProfileSummary } from "@/lib/demo";
 import { useProgress } from "@/lib/gamification";
-
-const plural = new Intl.PluralRules("ru-RU");
 
 // «Екатерина Волкова» → «ЕВ», «Демо-сотрудник» → «ДС»
 function initials(name: string) {
@@ -26,14 +23,12 @@ function initials(name: string) {
 
 // Шапка над содержимым: кто вошёл, его уровень и бригада, уведомления.
 // Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар
-export function ProfileHeader({ me, profile }: { me: Me; profile: ProfileSummary }) {
+export function ProfileHeader({ me }: { me: Me }) {
   const logout = useLogout();
   // Титул — название уровня из геймификации
   const { data: progress } = useProgress();
-  const bellLabel =
-    profile.unread > 0
-      ? `Уведомления: ${profile.unread} ${plural.select(profile.unread) === "one" ? "новое" : "новых"}`
-      : "Уведомления";
+  // «Бригада 3 · Депо Москва-ВСМ»; у сотрудника без бригады строки нет
+  const crew = [me.crew, me.depot].filter(Boolean).join(" · ");
 
   return (
     <header className="flex items-center gap-3.5 px-1 pt-2 pb-2.5 lg:p-0 lg:pb-1">
@@ -67,20 +62,15 @@ export function ProfileHeader({ me, profile }: { me: Me; profile: ProfileSummary
       <div className="flex min-w-0 flex-1 flex-col gap-px">
         <span className="truncate text-[19px] font-semibold tracking-[-0.015em]">{me.name}</span>
         {progress && <span className="text-sm font-medium text-primary-text">{progress.level.title}</span>}
-        <span className="text-[13px] text-muted-foreground">{profile.crew}</span>
+        {crew && <span className="text-[13px] text-muted-foreground">{crew}</span>}
       </div>
 
       <Link
         href="/notifications"
-        aria-label={bellLabel}
+        aria-label="Уведомления"
         className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted"
       >
         <BellIcon className="size-5" />
-        {profile.unread > 0 && (
-          <span className="absolute -top-[5px] -right-[5px] flex h-5 min-w-5 items-center justify-center rounded-[10px] bg-primary px-[5px] text-xs font-semibold text-primary-foreground shadow-[0_0_0_2px_var(--background)]">
-            {profile.unread}
-          </span>
-        )}
       </Link>
     </header>
   );

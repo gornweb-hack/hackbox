@@ -22,11 +22,16 @@ interface User {
   name: string;
   email: string | null;
   role: Role;
+  crew: string | null;
+  depot: string | null;
   createdAt: string;
 }
 
 const USERS_KEY = ["users"] as const;
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
+
+// «Бригада 3 · Депо Москва-ВСМ» или null, если ничего не назначено
+const crewOf = (user: User) => [user.crew, user.depot].filter(Boolean).join(" · ") || null;
 
 // Сотрудники: список, создание и правка. Аккаунты заводит администратор
 export default function UsersPage() {
@@ -65,6 +70,7 @@ export default function UsersPage() {
                   <span>{user.login}</span>
                   <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
                   {user.email && <span>{user.email}</span>}
+                  {crewOf(user) && <span>{crewOf(user)}</span>}
                 </CardContent>
               </Card>
             ))}
@@ -80,6 +86,7 @@ export default function UsersPage() {
                     <TableHead>Логин</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Роль</TableHead>
+                    <TableHead>Бригада · Депо</TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -92,6 +99,7 @@ export default function UsersPage() {
                       <TableCell>
                         <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
                       </TableCell>
+                      <TableCell className="text-muted-foreground">{crewOf(user) ?? "—"}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon-sm" onClick={() => setEditing(user)} aria-label="Изменить">
                           <PencilIcon />
@@ -130,8 +138,11 @@ function UserDialog({ user, onClose }: { user: User | "new" | null; onClose: () 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    // Пустые поля не отправляем: при правке это значит «не менять»
-    const body = Object.fromEntries([...form.entries()].filter(([, value]) => value !== "")) as Record<string, string>;
+    // Пустые поля не отправляем: при правке это значит «не менять». Исключение — бригада и депо:
+    // если их стёрли, ядро очищает поле по пустой строке
+    const body = Object.fromEntries(
+      [...form.entries()].filter(([key, value]) => value !== "" || ((key === "crew" || key === "depot") && current?.[key])),
+    ) as Record<string, string>;
     save.mutate(body);
   }
 
@@ -170,6 +181,10 @@ function UserDialog({ user, onClose }: { user: User | "new" | null; onClose: () 
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Бригада" name="crew" defaultValue={current?.crew ?? ""} placeholder="Бригада 3" />
+              <Field label="Депо" name="depot" defaultValue={current?.depot ?? ""} placeholder="Депо Москва-ВСМ" />
             </div>
             <Field
               label={isNew ? "Пароль (от 6 символов)" : "Новый пароль (пусто — не менять)"}

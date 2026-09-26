@@ -7,7 +7,6 @@ import type { ReactNode } from "react";
 import { ProfileHeader } from "@/components/profile-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMe } from "@/lib/auth";
-import { DEMO_PROFILE } from "@/lib/demo";
 import { EventStreamProvider } from "@/lib/events";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-7 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
-            <ProfileHeader me={me} profile={DEMO_PROFILE} />
+            <ProfileHeader me={me} />
             {children}
           </main>
           <BottomNav />

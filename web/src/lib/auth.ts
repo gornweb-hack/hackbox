@@ -11,6 +11,9 @@ export interface Me {
   name: string;
   email: string | null;
   role: Role;
+  // Бригада и депо — для шапки и рейтинга; null, если не назначены
+  crew: string | null;
+  depot: string | null;
   createdAt: string;
 }
 
