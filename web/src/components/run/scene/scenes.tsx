@@ -2,6 +2,7 @@ import type { ReactNode, SVGProps } from "react";
 import type { Outcome } from "@/lib/runs";
 import type { Tone } from "@/lib/scales";
 import { type Arm, Burst, Conductor, type Face, type Holding, Interior, Seat, Seated, Standing, Trolley } from "./figures";
+import { LOOKS } from "./head";
 
 // Фаза сцены: идёт прохождение или показан исход
 export type Phase = "play" | Outcome;
@@ -110,8 +111,8 @@ function SickScene(p: SceneProps) {
       <Interior clip={p.clip} />
       <Seat x={200} />
       <Seat x={278} />
-      <Seated x={240} coat="#7a7f87" hair="#cfcfcf" face={face} arm={p.phase === "play" ? "chest" : "lap"} slump={bad(p)} />
-      <Seated x={318} coat="#c0674a" skin="#e8b892" face={p.phase === "good" ? "smile" : "sad"} arm={p.phase === "play" && !p.reaction ? "wave" : "lap"} />
+      <Seated x={240} coat="#7a7f87" look={LOOKS.elder} face={face} arm={p.phase === "play" ? "chest" : "lap"} slump={bad(p)} />
+      <Seated x={318} coat="#c0674a" look={LOOKS.neighbour} face={p.phase === "good" ? "smile" : "sad"} arm={p.phase === "play" && !p.reaction ? "wave" : "lap"} />
       {bad(p) && <Burst cx={318} cy={129} tone="worry" />}
       <ConductorWithTrolley walk={p.walk} bob={p.bob} action={p.action} help={helped} nearDx={54} />
     </g>
@@ -129,14 +130,14 @@ function SeatScene(p: SceneProps) {
       <Interior clip={p.clip} />
       <Seat x={200} />
       <Seat x={278} />
-      <Seated x={318} coat="#5e8f6a" skin="#e8b892" face={bad(p) ? "sad" : "calm"} />
+      <Seated x={318} coat="#5e8f6a" look={LOOKS.redhead} face={bad(p) ? "sad" : "calm"} />
       {seated ? (
-        <Seated x={240} coat="#8a6fb0" hair="#3a2e26" face={p.phase === "good" ? "smile" : "sad"} />
+        <Seated x={240} coat="#8a6fb0" look={LOOKS.man} face={p.phase === "good" ? "smile" : "sad"} />
       ) : (
-        <Standing x={228} coat="#8a6fb0" hair="#3a2e26" face={face} right={arguing ? "up" : "down"} />
+        <Standing x={228} coat="#8a6fb0" look={LOOKS.man} face={face} right={arguing ? "up" : "down"} />
       )}
       <Move dx={p.phase === "good" ? 170 : 0} slow>
-        <Standing x={262} coat="#c9892f" skin="#e8b892" hair="#2f2a26" face={p.phase === "good" ? "smile" : face} right={arguing ? "up" : "down"} flip />
+        <Standing x={262} coat="#c9892f" look={LOOKS.woman} face={p.phase === "good" ? "smile" : face} right={arguing ? "up" : "down"} flip />
       </Move>
       {arguing && (
         <>
@@ -144,7 +145,7 @@ function SeatScene(p: SceneProps) {
           <Burst cx={262} cy={103} tone="anger" />
         </>
       )}
-      {p.phase === "bad" && <Standing x={96} coat="#1d2a44" pants="#141c2b" hat="cap" hair="#3a2e26" />}
+      {p.phase === "bad" && <Standing x={96} coat="#1b1d22" pants="#141c2b" look={LOOKS.guard} />}
       <ConductorWithTrolley walk={p.walk} bob={p.bob} action={p.action} help={good(p)} nearDx={44} />
     </g>
   );
@@ -170,12 +171,12 @@ function StopScene(p: SceneProps) {
       </g>
       <Seat x={200} />
       <Seat x={278} />
-      <Seated x={240} coat="#7a7f87" hair="#cfcfcf" face={bad(p) ? "sad" : "calm"} />
-      {p.phase === "good" || p.phase === "ok" ? <Seated x={318} coat="#b0506e" skin="#f1cfb0" hair="#8a5a3c" face={p.phase === "good" ? "smile" : "sad"} /> : null}
+      <Seated x={240} coat="#7a7f87" look={LOOKS.elder} face={bad(p) ? "sad" : "calm"} />
+      {p.phase === "good" || p.phase === "ok" ? <Seated x={318} coat="#b0506e" look={LOOKS.woman} face={p.phase === "good" ? "smile" : "sad"} /> : null}
       {p.phase === "bad" && <rect x="304" y="164" width="26" height="18" rx="3" fill="#8a5a3c" />}
       {standing && (
         <Move dx={p.reaction === "bad" ? 14 : 0}>
-          <Standing x={344} coat="#b0506e" skin="#f1cfb0" hair="#8a5a3c" face={p.reaction === "good" ? "calm" : "sad"} left={p.reaction ? "down" : "wave"} />
+          <Standing x={344} coat="#b0506e" look={LOOKS.woman} face={p.reaction === "good" ? "calm" : "sad"} left={p.reaction ? "down" : "wave"} />
         </Move>
       )}
       <ConductorWithTrolley walk={p.walk} bob={p.bob} action={p.action} help={good(p)} nearDx={p.phase === "play" ? 170 : 150} />
@@ -205,14 +206,14 @@ function PlatformScene(p: SceneProps) {
       <text x="45" y="117" textAnchor="middle" fontSize="10" fontWeight="600" fill="#fff" fontFamily="sans-serif">
         Кассы
       </text>
-      <Standing x={150} coat="#5e8f6a" skin="#e8b892" suitcase face={bad(p) ? "angry" : "calm"} />
-      <Standing x={180} coat="#8a6fb0" hair="#3a2e26" suitcase face={bad(p) ? "sad" : "calm"} />
+      <Standing x={150} coat="#5e8f6a" look={LOOKS.redhead} suitcase face={bad(p) ? "angry" : "calm"} />
+      <Standing x={180} coat="#8a6fb0" look={LOOKS.woman} suitcase face={bad(p) ? "sad" : "calm"} />
       {bad(p) && <Burst cx={165} cy={103} tone="anger" />}
       <Move dx={p.phase === "good" ? -150 : p.phase === "ok" ? -110 : 0} slow>
         <Standing
           x={214}
           coat="#c9892f"
-          skin="#f0c8a4"
+          look={LOOKS.man}
           suitcase
           face={p.phase === "good" ? "smile" : p.phase === "ok" ? "sad" : angry ? "angry" : "calm"}
           right={angry ? "up" : "down"}
@@ -243,8 +244,8 @@ function GeneralScene(p: SceneProps) {
       <Interior clip={p.clip} />
       <Seat x={200} />
       <Seat x={278} />
-      <Seated x={240} coat="#7a7f87" hair="#cfcfcf" face={p.phase === "good" ? "smile" : bad(p) ? "sad" : "calm"} />
-      <Seated x={318} coat="#c0674a" skin="#e8b892" face={p.phase === "good" ? "smile" : "calm"} />
+      <Seated x={240} coat="#7a7f87" look={LOOKS.elder} face={p.phase === "good" ? "smile" : bad(p) ? "sad" : "calm"} />
+      <Seated x={318} coat="#c0674a" look={LOOKS.neighbour} face={p.phase === "good" ? "smile" : "calm"} />
       <ConductorWithTrolley walk={p.walk} bob={p.bob} action={p.action} help={good(p)} nearDx={54} />
     </g>
   );

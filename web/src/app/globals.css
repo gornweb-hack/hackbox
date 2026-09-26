@@ -51,13 +51,25 @@
 }
 
 /* Анимации плеера: проводник идёт с тележкой, пейзаж летит за окном, пассажир машет рукой,
-   экран вспыхивает после решения. Включаются через motion-safe:, чтобы уважать «уменьшить движение» */
+   персонажи моргают, экран вспыхивает после решения. Включаются через motion-safe:, чтобы уважать «уменьшить движение» */
 @theme {
   --animate-car-walk: car-walk var(--walk-ms, 3500ms) ease-out both;
   --animate-car-bob: car-bob 0.38s ease-in-out infinite alternate;
   --animate-car-speed: car-speed 0.9s linear infinite;
   --animate-car-wave: car-wave 0.6s ease-in-out infinite alternate;
   --animate-screen-flash: screen-flash 1.1s ease-out both;
+  --animate-car-blink: car-blink 4.2s infinite;
+
+  @keyframes car-blink {
+    0%,
+    94%,
+    100% {
+      transform: scaleY(1);
+    }
+    96% {
+      transform: scaleY(0.1);
+    }
+  }
 
   @keyframes car-wave {
     from {
@@ -86,12 +98,10 @@
       transform: translateY(-1.8px);
     }
   }
+  /* Сдвиг ровно на период узора облаков (SPEED_PERIOD в figures.tsx), поэтому цикл не дёргается */
   @keyframes car-speed {
-    from {
-      transform: translateX(40px);
-    }
     to {
-      transform: translateX(-60px);
+      transform: translateX(-100px);
     }
   }
 }

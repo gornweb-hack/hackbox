@@ -1,47 +1,71 @@
+import { type Emotion, Head, LOOKS, type Look, type Neckline } from "./head";
+
 // Фигуры для сцен вагона. Координаты общие для всех сцен: пол на y=200, сиденья на y=114–198.
 // Цвета — литералы иллюстрации, а не токены интерфейса: сцена одинакова в любой теме
 
+// Состояние лица в сцене. pale и out — пассажиру плохо: лицо бледнеет, эмоция «плохо»
 export type Face = "calm" | "smile" | "sad" | "angry" | "pale" | "out";
-export type Arm = "down" | "up" | "reach" | "push" | "wave" | "phone" | "calm";
-// Что проводник держит в правой руке
-export type Holding = "radio" | "mic" | "water" | "pill" | "ticket";
 
-// Лицо: глаза, рот и признаки состояния — пот у бледного, морщины гнева у злого
-export function FaceMarks({ cx, cy, face }: { cx: number; cy: number; face: Face }) {
-  const eyes =
-    face === "out" ? (
-      <g stroke="#555" strokeWidth="1.1" fill="none" strokeLinecap="round">
-        <path d={`M${cx - 5} ${cy + 1} q2 1.6 4 0`} />
-        <path d={`M${cx + 1} ${cy + 1} q2 1.6 4 0`} />
-      </g>
-    ) : (
-      <g fill="#222">
-        <circle cx={cx - 3} cy={cy + 1} r="1.3" />
-        <circle cx={cx + 3.5} cy={cy + 1} r="1.3" />
-      </g>
-    );
-  const mouth = {
-    calm: `M${cx - 2} ${cy + 6} h4.5`,
-    smile: `M${cx - 3} ${cy + 5} q3.2 3.4 6.4 0`,
-    sad: `M${cx - 3} ${cy + 7.5} q3.2 -3 6.4 0`,
-    angry: `M${cx - 3} ${cy + 7.5} q3.2 -3 6.4 0`,
-    pale: `M${cx - 2.5} ${cy + 7} q2.8 -2.2 5.6 0`,
-    out: `M${cx - 1.5} ${cy + 6} q1.5 1.5 3 0`,
-  }[face];
+const EMOTIONS: Record<Face, Emotion> = { calm: "calm", smile: "smile", sad: "worried", angry: "angry", pale: "pain", out: "pain" };
+const isPale = (face: Face) => face === "pale" || face === "out";
+const PALE_HAND = "#e4e2cc";
+
+// Теневая сторона цвета: как на лицах, у одежды правая половина темнее
+export function shade(hex: string, amount = 0.18) {
+  const n = parseInt(hex.slice(1), 16);
+  const channel = (shift: number) => Math.round(((n >> shift) & 255) * (1 - amount));
+  return `rgb(${channel(16)} ${channel(8)} ${channel(0)})`;
+}
+
+// Ворот у верхнего края туловища: x — центр, top — линия плеч
+function Collar({ x, top, neck, coat, skin }: { x: number; top: number; neck: Neckline; coat: string; skin: string }) {
+  switch (neck.kind) {
+    case "shirt":
+      return (
+        <g>
+          <path d={`M${x - 6} ${top} L${x} ${top + 13} L${x + 6} ${top} Z`} fill="#fff" />
+          <path d={`M${x - 1.3} ${top + 2} h2.6 l1 9 l-2.3 2.4 l-2.3 -2.4 Z`} fill={neck.tie} />
+          <path d={`M${x - 6} ${top} L${x - 9} ${top + 5} L${x - 1} ${top + 15} Z`} fill={shade(coat, 0.35)} />
+          <path d={`M${x + 6} ${top} L${x + 9} ${top + 5} L${x + 1} ${top + 15} Z`} fill={shade(coat, 0.45)} />
+        </g>
+      );
+    case "turtle":
+      return <rect x={x - 6} y={top - 2.5} width="12" height="5" rx="2.5" fill={shade(coat, 0.25)} />;
+    case "pearls":
+      return (
+        <g fill="#fbf8f2">
+          {[-5, -2.5, 0, 2.5, 5].map((dx) => (
+            <circle key={dx} cx={x + dx} cy={top + 2 + (5 - Math.abs(dx)) * 0.4} r="1.2" />
+          ))}
+        </g>
+      );
+    case "open":
+      return <path d={`M${x - 4.5} ${top} L${x} ${top + 8} L${x + 4.5} ${top} Z`} fill={skin} />;
+    case "scarf":
+      return (
+        <g>
+          <path d={`M${x - 6} ${top} L${x} ${top + 12} L${x + 6} ${top} Z`} fill="#fff" />
+          <path d={`M${x - 3.5} ${top + 1} L${x} ${top + 8} L${x + 3.5} ${top + 1} Z`} fill={neck.color} />
+          <path d={`M${x} ${top + 7} l-3 6 h6 Z`} fill={shade(neck.color, 0.2)} />
+        </g>
+      );
+  }
+}
+
+// Туловище в стиле портретов: скруглённые плечи, правая половина в тени, ворот персонажа
+function Torso({ x, top, bottom, half, coat, look }: { x: number; top: number; bottom: number; half: number; coat: string; look: Look }) {
+  const shoulder = top + 9;
   return (
     <g>
-      {eyes}
-      <path d={mouth} stroke="#7a3b2e" strokeWidth="1.3" fill="none" strokeLinecap="round" />
-      {face === "angry" && (
-        <g stroke="#3a2a22" strokeWidth="1.4" strokeLinecap="round">
-          <path d={`M${cx - 5} ${cy - 3} l4 1.6`} />
-          <path d={`M${cx + 6} ${cy - 3} l-4 1.6`} />
-        </g>
-      )}
-      {face === "pale" && <path className="motion-safe:animate-pulse" d={`M${cx + 9} ${cy - 6} q2.5 4 0 6 q-2.5 -2 0 -6 z`} fill="#7fb3e0" />}
+      <path d={`M${x - half} ${bottom} L${x - half} ${shoulder} Q${x - half} ${top + 1} ${x - half + 8} ${top} L${x + half - 8} ${top} Q${x + half} ${top + 1} ${x + half} ${shoulder} L${x + half} ${bottom} Z`} fill={coat} />
+      <path d={`M${x} ${top} L${x + half - 8} ${top} Q${x + half} ${top + 1} ${x + half} ${shoulder} L${x + half} ${bottom} L${x} ${bottom} Z`} fill={shade(coat)} />
+      <Collar x={x} top={top} neck={look.neck} coat={coat} skin={look.skinShade} />
     </g>
   );
 }
+export type Arm = "down" | "up" | "reach" | "push" | "wave" | "phone" | "calm";
+// Что проводник держит в правой руке
+export type Holding = "radio" | "mic" | "water" | "pill" | "ticket";
 
 // Знак сильной эмоции над головой: гнев — три красные чёрточки, тревога — жёлтые
 export function Burst({ cx, cy, tone }: { cx: number; cy: number; tone: "anger" | "worry" }) {
@@ -53,8 +77,6 @@ export function Burst({ cx, cy, tone }: { cx: number; cy: number; tone: "anger" 
     </g>
   );
 }
-
-const PALE_SKIN = "#dcd9be";
 
 // Форма руки: путь от плеча и где кисть. side: -1 — левая рука, 1 — правая
 function armShape(x: number, s: -1 | 1, arm: Arm): { d: string; hand: [number, number] } {
@@ -110,11 +132,12 @@ function HeldItem({ at: [hx, hy], item }: { at: [number, number]; item: Holding 
   }
 }
 
+// Рука: левая (дальняя) в тени, правая — в цвете одежды, как половины туловища
 function ArmPath({ x, side, arm, coat, skin }: { x: number; side: -1 | 1; arm: Arm; coat: string; skin: string }) {
   const { d, hand } = armShape(x, side, arm);
   return (
     <g className={arm === "wave" ? "origin-bottom motion-safe:animate-car-wave [transform-box:fill-box]" : undefined}>
-      <path d={d} stroke={coat} strokeWidth="6" strokeLinecap="round" fill="none" />
+      <path d={d} stroke={side === 1 ? coat : shade(coat, 0.25)} strokeWidth="7" strokeLinecap="round" fill="none" />
       <circle cx={hand[0]} cy={hand[1]} r="3.4" fill={skin} />
     </g>
   );
@@ -125,13 +148,10 @@ export function Standing({
   x,
   coat,
   pants = "#2f3b4a",
-  skin = "#f0c8a4",
-  hair = "#6b4a34",
+  look,
   face = "calm",
   left = "down",
   right = "down",
-  hat,
-  scarf,
   bag,
   suitcase,
   holding,
@@ -140,19 +160,16 @@ export function Standing({
   x: number;
   coat: string;
   pants?: string;
-  skin?: string;
-  hair?: string;
+  look: Look;
   face?: Face;
   left?: Arm;
   right?: Arm;
-  hat?: "pilotka" | "cap";
-  scarf?: string;
   bag?: boolean;
   suitcase?: boolean;
   holding?: Holding;
   flip?: boolean;
 }) {
-  const tone = face === "pale" ? PALE_SKIN : skin;
+  const tone = isPale(face) ? PALE_HAND : look.skinLight;
   return (
     <g transform={flip ? `translate(${2 * x} 0) scale(-1 1)` : undefined}>
       {suitcase && (
@@ -161,12 +178,11 @@ export function Standing({
           <path d={`M${x + 17} 166 v-5 h8 v5`} stroke="#5b3b27" strokeWidth="1.6" fill="none" />
         </g>
       )}
-      <rect x={x - 8} y="160" width="7" height="38" rx="3" fill={pants} />
-      <rect x={x + 1} y="160" width="7" height="38" rx="3" fill={pants} />
-      <ellipse cx={x - 4} cy="199" rx="6" ry="2.6" fill="#1b2230" />
-      <ellipse cx={x + 5} cy="199" rx="6" ry="2.6" fill="#1b2230" />
-      <path d={`M${x - 13} 162 L${x - 9} 122 Q${x} 116 ${x + 9} 122 L${x + 13} 162 Z`} fill={coat} />
-      {scarf && <path d={`M${x - 4} 119 L${x} 130 L${x + 4} 119 Z`} fill={scarf} />}
+      <rect x={x - 9} y="158" width="8" height="40" rx="2" fill={pants} />
+      <rect x={x + 1} y="158" width="8" height="40" rx="2" fill={shade(pants)} />
+      <path d={`M${x - 11} 200 v-3 a3 3 0 0 1 3 -3 h7 v6 Z`} fill="#15181f" />
+      <path d={`M${x + 1} 194 h7 a3 3 0 0 1 3 3 v3 h-10 Z`} fill="#15181f" />
+      <Torso x={x} top={119} bottom={162} half={15} coat={coat} look={look} />
       <ArmPath x={x} side={-1} arm={left} coat={coat} skin={tone} />
       <ArmPath x={x} side={1} arm={right} coat={coat} skin={tone} />
       {bag && (
@@ -175,17 +191,7 @@ export function Standing({
           <rect x={x - 17} y="153" width="4" height="5" fill="#fff" />
         </g>
       )}
-      <rect x={x - 3} y="110" width="6" height="8" fill={tone} />
-      <circle cx={x} cy="103" r="10" fill={tone} />
-      <path d={`M${x - 10} 102 Q${x - 9} 91 ${x} 91 Q${x + 10} 91 ${x + 10} 102 Q${x + 6} 96 ${x} 96 Q${x - 6} 96 ${x - 10} 102 Z`} fill={hair} />
-      {hat === "pilotka" && <path d={`M${x - 10} 95 L${x + 10} 93 L${x + 9} 88 Q${x} 84 ${x - 9} 89 Z`} fill={coat} />}
-      {hat === "cap" && (
-        <g fill="#141c2b">
-          <path d={`M${x - 10} 95 Q${x} 84 ${x + 10} 95 Z`} />
-          <rect x={x - 2} y="94" width="15" height="3" rx="1.5" />
-        </g>
-      )}
-      <FaceMarks cx={x + 1} cy={102} face={face} />
+      <Head look={look} emotion={EMOTIONS[face]} pale={isPale(face)} x={x} bottom={120} height={28} />
       {holding && <HeldItem at={armShape(x, 1, right).hand} item={holding} />}
     </g>
   );
@@ -208,7 +214,7 @@ export function Conductor({
   flip?: boolean;
 }) {
   return (
-    <Standing x={x} coat="#23406b" pants="#1e2c45" hat="pilotka" scarf="#2a9d8f" right={right} left={left} face={face} holding={holding} flip={flip} />
+    <Standing x={x} coat="#23406b" pants="#1e2c45" look={LOOKS.conductor} right={right} left={left} face={face} holding={holding} flip={flip} />
   );
 }
 
@@ -218,21 +224,19 @@ export type SeatedArm = "lap" | "chest" | "wave";
 export function Seated({
   x,
   coat,
-  skin = "#e6c9a8",
-  hair = "#2f2a26",
+  look,
   face = "calm",
   arm = "lap",
   slump,
 }: {
   x: number;
   coat: string;
-  skin?: string;
-  hair?: string;
+  look: Look;
   face?: Face;
   arm?: SeatedArm;
   slump?: boolean;
 }) {
-  const tone = face === "pale" || face === "out" ? PALE_SKIN : skin;
+  const tone = isPale(face) ? PALE_HAND : look.skinLight;
   const arms = {
     lap: { d: `M${x - 10} 150 Q${x - 4} 162 ${x + 5} 164`, hand: [x + 6, 164] },
     chest: { d: `M${x - 11} 158 Q${x - 4} 150 ${x + 1} 155`, hand: [x + 1, 156] },
@@ -240,17 +244,14 @@ export function Seated({
   }[arm];
   return (
     <g className="origin-bottom transition-transform duration-700 [transform-box:fill-box]" style={{ transform: slump ? "rotate(9deg)" : undefined }}>
-      <path d={`M${x - 14} 186 L${x - 17} 199 L${x - 7} 199 L${x - 4} 186 Z`} fill="#4e4a45" />
-      <path d={`M${x + 2} 186 L${x} 199 L${x + 10} 199 L${x + 11} 186 Z`} fill="#4e4a45" />
-      <path d={`M${x - 19} 186 Q${x - 21} 156 ${x - 10} 146 L${x + 10} 146 Q${x + 21} 156 ${x + 19} 186 Z`} fill={coat} />
+      <rect x={x - 14} y="184" width="9" height="15" rx="2" fill="#4e4a45" />
+      <rect x={x + 2} y="184" width="9" height="15" rx="2" fill={shade("#4e4a45")} />
+      <Torso x={x} top={146} bottom={187} half={19} coat={coat} look={look} />
       <g className={arm === "wave" ? "origin-bottom motion-safe:animate-car-wave [transform-box:fill-box]" : undefined}>
-        <path d={arms.d} stroke={coat} strokeWidth="6" strokeLinecap="round" fill="none" />
+        <path d={arms.d} stroke={shade(coat, 0.25)} strokeWidth="7" strokeLinecap="round" fill="none" />
         <circle cx={arms.hand[0]} cy={arms.hand[1]} r="3.4" fill={tone} />
       </g>
-      <rect x={x - 3} y="137" width="6" height="9" fill={tone} />
-      <circle cx={x} cy="129" r="11" fill={tone} />
-      <path d={`M${x - 11} 127 Q${x - 11} 117 ${x} 117 Q${x + 11} 117 ${x + 11} 127 Q${x + 6} 121 ${x} 121 Q${x - 6} 121 ${x - 11} 127 Z`} fill={hair} />
-      <FaceMarks cx={x + 1} cy={128} face={face} />
+      <Head look={look} emotion={EMOTIONS[face]} pale={isPale(face)} x={x} bottom={148} height={30} />
     </g>
   );
 }
@@ -283,6 +284,9 @@ export function Trolley({ x, bob }: { x: number; bob?: string }) {
   );
 }
 
+// Ширина повторяющегося узора облаков; совпадает со сдвигом в анимации car-speed (globals.css)
+const SPEED_PERIOD = 100;
+
 // Окно салона: в пути за ним летит пейзаж, на стоянке видна платформа
 export function Window({ x, width, clipId, station }: { x: number; width: number; clipId: string; station?: boolean }) {
   const inner = x + 5;
@@ -305,10 +309,15 @@ export function Window({ x, width, clipId, station }: { x: number; width: number
           <g>
             <path d={`M${inner} 110 Q${inner + 50} 104 ${inner + 90} 110 T${right} 108 L${right} 124 L${inner} 124 Z`} fill="#a9cf9a" />
             <path d={`M${inner} 117 Q${inner + 70} 113 ${right} 117 L${right} 124 L${inner} 124 Z`} fill="#86b77b" />
+            {/* Узор облаков повторяется через SPEED_PERIOD и сдвигается ровно на период — цикл без скачка */}
             <g className="motion-safe:animate-car-speed" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity="0.85">
-              <line x1={inner + 20} y1="92" x2={inner + 70} y2="92" />
-              <line x1={inner + 60} y1="99" x2={inner + 120} y2="99" />
-              <line x1={inner + 14} y1="105" x2={inner + 50} y2="105" />
+              {[0, 1, 2].map((copy) => (
+                <g key={copy} transform={`translate(${inner + copy * SPEED_PERIOD} 0)`}>
+                  <line x1="10" y1="92" x2="55" y2="92" />
+                  <line x1="45" y1="99" x2="95" y2="99" />
+                  <line x1="4" y1="105" x2="36" y2="105" />
+                </g>
+              ))}
             </g>
           </g>
         )}
