@@ -33,10 +33,11 @@ npm run start:dev
 | `src/app.module.ts` | список модулей приложения |
 | `src/auth/` | `AuthModule` (`auth.module.ts`) — вход и сотрудники. Внутри: `tokens.ts` (access-JWT из cookie или Bearer), `auth.service.ts` (вход, refresh с ротацией, выход, регистрация), `auth.guard.ts` (`AuthGuard`, `@Roles`, `@CurrentUser`), `password.ts` (scrypt), `seed.ts` (демо-аккаунты при старте) |
 | `src/users/` | часть `AuthModule`: `GET /api/users`, `POST` и `PATCH /api/users` для админа; публикует `user.created` и `user.updated` |
-| `src/events/` | `EventsModule`: `events.service.ts` (публикация по принципу «лучшее усилие»), `events.consumer.ts` (группа `core`: чтение, повторы, DLQ), `envelope.ts` (конверт), `stream.controller.ts` (SSE `/api/stream`), `redis.ts` (подключения). Правила — в [памятке по событиям](../docs/events.md) |
+| `src/events/` | `EventsModule`: `events.service.ts` (публикация по принципу «лучшее усилие»), `events.consumer.ts` (группа `core`: чтение, повторы, DLQ; модули подписываются через `on`), `envelope.ts` (конверт), `stream.controller.ts` (SSE `/api/stream`), `redis.ts` (подключения). Правила — в [памятке по событиям](../docs/events.md) |
 | `src/prisma/` | `PrismaModule`: одно подключение к базе на всё приложение |
 | `src/health/` | `HealthModule`: `GET /api/health` с проверкой базы и статусом Redis |
 | `src/scenarios/` | `ScenariosModule`: каталог из `content/scenarios/*.yaml` (файлы читаются при каждом запросе) и прохождения `/api/scenarios/runs`. `script.ts` — формат диалога, `engine.ts` — правила: шкалы, переходы, таймер. `runs.service.ts` хранит прохождения и в финале публикует `scenario.completed`. Формат — в [памятке по контенту](../docs/content.md) |
+| `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация. `GET /api/gamification/me/progress`, события `progress.updated` и тост о новом уровне |
 | `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id` |
 | `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 

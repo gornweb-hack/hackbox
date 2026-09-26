@@ -46,7 +46,15 @@ await this.events.publish(
 
 ## Обработка
 
-Ядро обрабатывает события в `EventsConsumer.handle`: проверяет `notification.requested` и отдаёт адресованные события в SSE. Обработчик модуля, например начисление очков по `scenario.completed`, подключается туда же вместе с первым таким обработчиком.
+Ядро обрабатывает события в `EventsConsumer.handle`: проверяет `notification.requested`, отдаёт адресованные события в SSE, затем вызывает обработчики модулей этого типа. Модуль подписывается в `onModuleInit`:
+
+```ts
+constructor(private readonly consumer: EventsConsumer) {}
+
+onModuleInit(): void {
+  this.consumer.on('scenario.completed', (event) => this.record(event));
+}
+```
 
 Правила для обработчиков:
 - **Идемпотентность.** Одно событие может прийти дважды. Повтор отсекается по `id` конверта или по смыслу, например уникальным ключом `run_id` в своей таблице.
@@ -64,7 +72,8 @@ await this.events.publish(
 |---|---|---|---|
 | `notification.requested` | любой модуль | `{title, message, level: "info" \| "success" \| "warning"}` | тост в браузере. Нужен `userId` или `broadcast: true`, иначе событие уйдёт в DLQ |
 | `user.created`, `user.updated` | вход и сотрудники (`UsersService`) | `{id, name, role}` | фронт перечитывает список сотрудников |
-| `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читают геймификация и аналитика |
+| `progress.updated` | геймификация (`GamificationService`), после записи прохождения в журнал | `{runId}` | фронт перечитывает уровень и репутацию |
+| `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читает геймификация: журнал для опыта, уровня и репутации |
 
 ## Ключи в Redis
 

@@ -114,11 +114,10 @@ docker compose up -d --build
 
 **`scenarios`** — сделано: каталог, прохождение с таймером и двумя шкалами, разбор решений, событие `scenario.completed`. API — в [README](../README.md#сценарии).
 
-**`gamification`:**
-1. Обработка `scenario.completed`: начисление очков компетенций, повтор отсекается по `runId`.
-2. Уровни и ачивки — по правилам из YAML, чтобы их можно было поправить при жюри.
-3. `GET /api/gamification/leaderboard` и `GET /api/gamification/me/progress` для фронта.
-4. При новой ачивке — `notification.requested` проводнику.
+**`gamification`** — сделано: журнал из `scenario.completed` (повтор отсекается по `runId`), опыт, уровни и репутация по правилам из `content/gamification.yaml`, `GET /api/gamification/me/progress`, тост о новом уровне. Дальше:
+1. Ачивки — по правилам из YAML, чтобы их можно было поправить при жюри.
+2. `GET /api/gamification/leaderboard` — рейтинг по бригаде, депо и компании.
+3. При новой ачивке — `notification.requested` проводнику.
 
 **`analytics`:**
 1. Обработка `scenario.completed`: результаты — в своих таблицах, повтор отсекается по `runId`.
