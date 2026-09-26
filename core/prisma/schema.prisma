@@ -93,3 +93,24 @@ model ScenarioDecision {
   @@index([runId])
   @@map("scenario_decisions")
 }
+
+// ---------- gamification: опыт, уровни, репутация ----------
+
+// Журнал завершённых прохождений — копия из события scenario.completed. Опыт, уровень и репутация
+// считаются из него при запросе, поэтому правка правил в content/gamification.yaml сразу пересчитывает всех
+model GamificationRun {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  // Повторная доставка события отсекается уникальным runId
+  runId      String   @unique @map("run_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  scenarioId String   @map("scenario_id")
+  // good, ok или bad
+  outcome    String
+  loyalty    Int
+  safety     Int
+  // Время из события, а не время записи: по нему считается тренд за неделю
+  finishedAt DateTime @map("finished_at") @db.Timestamptz(3)
+
+  @@index([userId, finishedAt])
+  @@map("gamification_runs")
+}
