@@ -23,3 +23,14 @@ export function zoneOf(value: number): Zone {
 export function formatDelta(delta: number) {
   return delta > 0 ? `+${delta}` : delta < 0 ? `−${Math.abs(delta)}` : "0";
 }
+
+export type Tone = "good" | "bad" | "neutral";
+
+// Как ощущается решение — по нему экран вспыхивает, а в сцене проводник помогает или пассажиру хуже.
+// Плохое: время вышло, безопасность упала на 15 и больше или шкалы в сумме ушли в минус.
+// Хорошее: шкалы в сумме выросли на 20 и больше. Остальное — нейтральное, без вспышки
+export function decisionTone(decision: { timedOut: boolean; loyaltyDelta: number; safetyDelta: number }): Tone {
+  const sum = decision.loyaltyDelta + decision.safetyDelta;
+  if (decision.timedOut || decision.safetyDelta <= -15 || sum < 0) return "bad";
+  return sum >= 20 ? "good" : "neutral";
+}

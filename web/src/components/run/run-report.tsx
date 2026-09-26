@@ -4,10 +4,15 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import type { Outcome, RunView } from "@/lib/runs";
-import { formatDelta } from "@/lib/scales";
+import { demoReward } from "@/lib/demo";
+import { formatDelta, type Tone } from "@/lib/scales";
+import { useScenarios } from "@/lib/scenarios";
 import { useCountUp } from "@/lib/use-count-up";
 import { cn } from "@/lib/utils";
+import { CarScene } from "./car-scene";
+import { RewardCard } from "./reward-card";
 import { ScaleMeter } from "./scale-meter";
+import { ScreenFlash } from "./screen-flash";
 
 const OUTCOME_TITLES: Record<Outcome, string> = {
   good: "Отлично справились",
@@ -15,14 +20,22 @@ const OUTCOME_TITLES: Record<Outcome, string> = {
   bad: "Ситуация вышла из-под контроля",
 };
 
+// Исход вспыхивает на экране: хороший — зелёным, плохой — красным, «с замечаниями» — без вспышки
+const OUTCOME_TONES: Record<Outcome, Tone> = { good: "good", ok: "neutral", bad: "bad" };
+
 // Разбор после финала: исход, итоговые шкалы и каждое решение с тем, что и почему повлияло на шкалы
 export function RunReport({ run }: { run: RunView }) {
   // Итоговые шкалы набегают от нуля, решения появляются по одному — разбор читается сверху вниз
   const loyalty = useCountUp(run.loyalty);
   const safety = useCountUp(run.safety);
+  const { data: scenarios } = useScenarios();
+  const hasTimers = scenarios?.find((scenario) => scenario.id === run.scenarioId)?.hasTimers ?? false;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      {run.outcome && <ScreenFlash tone={OUTCOME_TONES[run.outcome]} />}
+      {run.outcome && <CarScene scenarioId={run.scenarioId} phase={run.outcome} />}
+
       <section className="flex flex-col gap-3 rounded-xl bg-hero px-5 pt-[22px] pb-5">
         <span className="text-[13px] font-medium text-[#93b2ff]">Разбор · {run.title}</span>
         <h1 className="text-[26px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-white lg:text-[34px]">
@@ -59,6 +72,8 @@ export function RunReport({ run }: { run: RunView }) {
           ))}
         </ol>
       </section>
+
+      <RewardCard reward={demoReward(run, hasTimers)} />
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link href={`/scenarios/${run.scenarioId}`} className={cn(buttonVariants(), "h-11 px-5 text-[15px]")}>

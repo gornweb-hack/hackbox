@@ -55,7 +55,7 @@ export default function ScenarioPage() {
       </section>
 
       {/* Пока человек читает, как устроен сценарий, проводник катит тележку по вагону */}
-      <CarScene walkMs={9000} />
+      <CarScene scenarioId={scenario.id} walkMs={9000} />
 
       <section className="flex flex-col gap-2 rounded-xl border bg-card p-5 text-[15px] leading-[1.5] shadow-card">
         <h2 className="text-base font-semibold tracking-[-0.01em]">Как это устроено</h2>
