@@ -6,7 +6,7 @@
 
 - **Схема компонентов и путь одного прохождения** — в [README](../README.md#архитектура), чтобы их было видно сразу на GitHub.
 - **Вход, доставка уведомлений, повтор событий и DLQ** — в [диаграммах последовательности](sequences.md).
-- **Для слайдов:** обе схемы из README одним PDF — `/architecture.pdf` на сайте (`web/public/architecture.pdf`), SVG — в [docs/diagrams/](diagrams/).
+- **Для слайдов:** обе схемы из README одним PDF — [gornweb.online/architecture.pdf](https://gornweb.online/architecture.pdf), локально — `/architecture.pdf` (файл `web/public/architecture.pdf`), SVG — в [docs/diagrams/](diagrams/).
 - **API** — Swagger на `/api/docs` и [справочник](api.md).
 
 ## Модули ядра
