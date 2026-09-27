@@ -1,4 +1,5 @@
 import { parse } from 'yaml';
+import { isObject } from '../common/content.js';
 import type { Script, ScenarioNode } from '../scenarios/script.js';
 
 export interface Skill {
@@ -13,10 +14,6 @@ export interface SkillsConfig {
   window: number;
   skills: Skill[];
 }
-
-type Fields = Record<string, unknown>;
-const isObject = (value: unknown): value is Fields =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // content/skills.yaml: оси радара и окно, за которое считается процент
 export function parseSkills(text: string): SkillsConfig {

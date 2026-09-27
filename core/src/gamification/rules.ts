@@ -1,4 +1,5 @@
 import { parse } from 'yaml';
+import { isObject } from '../common/content.js';
 
 export type Outcome = 'good' | 'ok' | 'bad';
 
@@ -40,10 +41,6 @@ export interface Rules {
 const OUTCOMES: Outcome[] = ['good', 'ok', 'bad'];
 // Скорость уровня — не выше максимальной скорости ВСМ, 400 км/ч
 const MAX_SPEED = 400;
-
-type Fields = Record<string, unknown>;
-const isObject = (value: unknown): value is Fields =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 function number(value: unknown, where: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error(`${where} должно быть числом`);

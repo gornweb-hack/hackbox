@@ -1,6 +1,8 @@
 // Сценарий как граф узлов из content/scenarios/<id>.yaml: реплики, варианты ответа, таймеры, финалы.
 // Здесь только разбор и проверка формата; как по графу идёт прохождение — в engine.ts
 
+import { type Fields, isObject } from '../common/content.js';
+
 export type ScaleName = 'loyalty' | 'safety';
 export type Scales = Record<ScaleName, number>;
 export type Outcome = 'good' | 'ok' | 'bad';
@@ -47,10 +49,6 @@ export interface Script {
 
 const SCALES: ScaleName[] = ['loyalty', 'safety'];
 const OUTCOMES: Outcome[] = ['good', 'ok', 'bad'];
-
-type Fields = Record<string, unknown>;
-const isObject = (value: unknown): value is Fields =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 function requireText(fields: Fields, field: string, where: string): string {
   const value = fields[field];

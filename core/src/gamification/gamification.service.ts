@@ -1,8 +1,6 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { ApiError } from '../common/api-error.js';
-import { config } from '../config.js';
+import { readContent } from '../common/content.js';
 import type { EventEnvelope } from '../events/envelope.js';
 import { EventsConsumer } from '../events/events.consumer.js';
 import { EventsService } from '../events/events.service.js';
@@ -93,13 +91,8 @@ export class GamificationService implements OnModuleInit {
     this.consumer.on('scenario.completed', (event) => this.record(event));
   }
 
-  // Правила читаются при каждом запросе: правка content/gamification.yaml видна сразу, без перезапуска
-  async rules(): Promise<Rules> {
-    try {
-      return parseRules(await readFile(join(config.contentDir, 'gamification.yaml'), 'utf8'));
-    } catch (error) {
-      throw new ApiError(500, 'CONTENT_INVALID', `Правила геймификации не читаются: ${(error as Error).message}`);
-    }
+  rules(): Promise<Rules> {
+    return readContent('gamification.yaml', 'Правила геймификации', parseRules);
   }
 
   // Обработчик scenario.completed: прохождение попадает в журнал, повтор события отсекается уникальным runId.

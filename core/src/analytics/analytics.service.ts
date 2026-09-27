@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { ApiError } from '../common/api-error.js';
-import { config } from '../config.js';
+import { readContent } from '../common/content.js';
 import { RunsService } from '../scenarios/runs.service.js';
 import { ScenariosService } from '../scenarios/scenarios.service.js';
 import { parseSkills, recommend, type SkillScore, type SkillsConfig, skillScores, weakest } from './skills.js';
@@ -25,13 +22,8 @@ export class AnalyticsService {
     private readonly runs: RunsService,
   ) {}
 
-  // Читается при каждом запросе: правка content/skills.yaml видна сразу, без перезапуска
-  async config(): Promise<SkillsConfig> {
-    try {
-      return parseSkills(await readFile(join(config.contentDir, 'skills.yaml'), 'utf8'));
-    } catch (error) {
-      throw new ApiError(500, 'CONTENT_INVALID', `Навыки не читаются: ${(error as Error).message}`);
-    }
+  config(): Promise<SkillsConfig> {
+    return readContent('skills.yaml', 'Навыки', parseSkills);
   }
 
   // Своей таблицы у аналитики нет: решения берутся у модуля сценариев, метки — из текущего YAML
