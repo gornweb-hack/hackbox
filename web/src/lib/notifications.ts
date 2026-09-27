@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api } from "./api";
 
 export interface AppNotification {
@@ -33,6 +34,13 @@ export function useMarkRead() {
     mutationFn: () => api<{ unread: number }>("/api/notifications/read", { method: "POST" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY }),
   });
+}
+
+// Закрыть уведомления — вернуться туда, откуда их открыли. Если страницу открыли по прямой ссылке
+// и возвращаться некуда, — на главную
+export function useCloseNotifications() {
+  const router = useRouter();
+  return () => (window.history.length > 1 ? router.back() : router.push("/"));
 }
 
 const dayTime = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" });

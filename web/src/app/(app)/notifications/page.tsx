@@ -1,9 +1,16 @@
 "use client";
 
-import { BellIcon } from "lucide-react";
+import { BellIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type AppNotification, type NotificationList, timeAgo, useMarkRead, useNotifications } from "@/lib/notifications";
+import {
+  type AppNotification,
+  type NotificationList,
+  timeAgo,
+  useCloseNotifications,
+  useMarkRead,
+  useNotifications,
+} from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 const DOTS: Record<AppNotification["level"], string> = {
@@ -15,12 +22,23 @@ const DOTS: Record<AppNotification["level"], string> = {
 // Центр уведомлений: всё, что приходило тостами, — новые сверху. Открыли страницу — всё прочитано
 export default function NotificationsPage() {
   const { data, isPending, isError } = useNotifications();
+  const close = useCloseNotifications();
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.02em]">Уведомления</h1>
-        <p className="text-sm text-muted-foreground">Новые уровни, ачивки и новости тренажёра. Последние 50.</p>
+      <div className="flex items-start gap-3">
+        <div className="flex flex-1 flex-col gap-1">
+          <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.02em]">Уведомления</h1>
+          <p className="text-sm text-muted-foreground">Новые уровни, ачивки и новости тренажёра. Последние 50.</p>
+        </div>
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Закрыть уведомления"
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted"
+        >
+          <XIcon className="size-5" />
+        </button>
       </div>
       {isPending ? (
         <Skeleton className="h-72 rounded-xl" />

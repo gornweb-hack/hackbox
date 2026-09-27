@@ -2,6 +2,7 @@
 
 import { BellIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -12,7 +13,8 @@ import {
 import { type Me, useLogout } from "@/lib/auth";
 import { useProgress } from "@/lib/gamification";
 import { initials } from "@/lib/names";
-import { useNotifications } from "@/lib/notifications";
+import { useCloseNotifications, useNotifications } from "@/lib/notifications";
+import { cn } from "@/lib/utils";
 
 // Шапка над содержимым: кто вошёл, его уровень и бригада, колокольчик со счётчиком непрочитанных.
 // Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар
@@ -59,18 +61,44 @@ export function ProfileHeader({ me }: { me: Me }) {
         {crew && <span className="text-[13px] text-muted-foreground">{crew}</span>}
       </div>
 
-      <Link
-        href="/notifications"
-        aria-label={unread > 0 ? `Уведомления: непрочитанных ${unread}` : "Уведомления"}
-        className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted"
+      <NotificationsBell unread={unread} />
+    </header>
+  );
+}
+
+const BELL =
+  "relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted";
+
+// Колокольчик открывает уведомления, а когда они открыты — подсвечен и закрывает их
+function NotificationsBell({ unread }: { unread: number }) {
+  const open = usePathname() === "/notifications";
+  const close = useCloseNotifications();
+
+  if (open) {
+    return (
+      <button
+        type="button"
+        onClick={close}
+        aria-label="Закрыть уведомления"
+        aria-pressed
+        className={cn(BELL, "border-primary-soft-border bg-primary-soft text-primary-text hover:border-primary")}
       >
         <BellIcon className="size-5" />
-        {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-zone-red px-1 text-[11px] font-semibold text-white">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </Link>
-    </header>
+      </button>
+    );
+  }
+  return (
+    <Link
+      href="/notifications"
+      aria-label={unread > 0 ? `Уведомления: непрочитанных ${unread}` : "Уведомления"}
+      className={BELL}
+    >
+      <BellIcon className="size-5" />
+      {unread > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-zone-red px-1 text-[11px] font-semibold text-white">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Link>
   );
 }

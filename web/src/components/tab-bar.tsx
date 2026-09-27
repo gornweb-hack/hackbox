@@ -174,7 +174,11 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
 
   useEffect(() => {
     const s = sim.current;
-    return () => cancelAnimationFrame(s.raf);
+    // Обнуляем, иначе после повторного монтирования (Strict Mode в dev) kick решит, что цикл ещё идёт
+    return () => {
+      cancelAnimationFrame(s.raf);
+      s.raf = 0;
+    };
   }, []);
 
   // Позиция пальца в пунктах: 0 — центр первого, n−1 — центр последнего
