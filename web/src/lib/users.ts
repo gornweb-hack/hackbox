@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "./api";
+import { api, type List } from "./api";
 import type { Role } from "./auth";
 
 export interface User {
@@ -19,7 +19,7 @@ export interface User {
 export const USERS_KEY = ["users"] as const;
 
 export function useUsers() {
-  return useQuery({ queryKey: USERS_KEY, queryFn: () => api<{ items: User[]; total: number }>("/api/users") });
+  return useQuery({ queryKey: USERS_KEY, queryFn: () => api<List<User>>("/api/users") });
 }
 
 // Без id — создание сотрудника, с id — правка

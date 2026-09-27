@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { SkillScore, Training } from "./analytics";
-import { api } from "./api";
+import { api, type List } from "./api";
 
 export type CarClass = "Стандарт" | "Комфорт" | "Бизнес" | "Первый";
 
@@ -28,7 +28,7 @@ export const SCENARIOS_KEY = ["scenarios"] as const;
 export function useScenarios() {
   return useQuery({
     queryKey: SCENARIOS_KEY,
-    queryFn: () => api<{ items: Scenario[]; total: number }>("/api/scenarios"),
+    queryFn: () => api<List<Scenario>>("/api/scenarios"),
     select: (data) => data.items,
   });
 }

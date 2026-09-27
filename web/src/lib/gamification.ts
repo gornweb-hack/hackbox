@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { api } from "./api";
+import { api, type List } from "./api";
 
 export interface Level {
   // Скорость уровня, км/ч — подпись вагона в карточке «Уровень»
@@ -71,14 +71,12 @@ export interface RatingRow {
 }
 
 // Рейтинг за месяц (GET /api/gamification/rating?scope=…). Правила мест — в core/src/gamification/rating.ts
-export interface Rating {
+export interface Rating extends List<RatingRow> {
   scope: RatingScope;
   // «Бригада 3», «Депо Москва-ВСМ», «Компания»; null — бригада или депо не назначены
   title: string | null;
   // «2026-09»
   month: string;
-  items: RatingRow[];
-  total: number;
   // null — вас нет в таблице: в этом месяце не было прохождений
   me: { place: number; xp: number; gap: { place: number; xp: number } | null } | null;
 }
@@ -97,7 +95,7 @@ export function useProgress() {
 export function useShelf() {
   return useQuery({
     queryKey: [...GAMIFICATION_KEY, "shelf"],
-    queryFn: () => api<{ items: ShelfItem[]; total: number }>("/api/gamification/me/achievements"),
+    queryFn: () => api<List<ShelfItem>>("/api/gamification/me/achievements"),
   });
 }
 

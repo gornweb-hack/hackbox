@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "./api";
+import { api, type List } from "./api";
 import { SCENARIOS_KEY } from "./scenarios";
 
 export type Outcome = "good" | "ok" | "bad";
@@ -62,7 +62,7 @@ const HISTORY_KEY = ["runs", "history"] as const;
 
 // Свои завершённые прохождения, новые первыми
 export function useRunHistory() {
-  return useQuery({ queryKey: HISTORY_KEY, queryFn: () => api<{ items: RunSummary[]; total: number }>("/api/scenarios/runs") });
+  return useQuery({ queryKey: HISTORY_KEY, queryFn: () => api<List<RunSummary>>("/api/scenarios/runs") });
 }
 
 export function useRun(runId: string) {

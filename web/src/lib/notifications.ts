@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { api } from "./api";
+import { api, type List } from "./api";
 
 export interface AppNotification {
   id: string;
@@ -14,9 +14,7 @@ export interface AppNotification {
   readAt: string | null;
 }
 
-export interface NotificationList {
-  items: AppNotification[];
-  total: number;
+export interface NotificationList extends List<AppNotification> {
   unread: number;
 }
 

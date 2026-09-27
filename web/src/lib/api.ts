@@ -41,6 +41,12 @@ export function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
+// Список из ответа API — формат из контракта: {items, total}
+export interface List<T> {
+  items: T[];
+  total: number;
+}
+
 export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
