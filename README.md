@@ -4,6 +4,33 @@
 
 Проводник проходит нештатные ситуации из памятки «Ситуации на борту»: пассажиру плохо на 400 км/ч, два билета на одно место, минутная стоянка. Решения на время меняют две шкалы — лояльность пассажира и рейтинг безопасности. Путь по сценарию нелинейный: шкалы копятся и через условия меняют развилки. После финала — разбор каждого решения, опыт и ачивки, место в рейтинге бригады, радар навыков ролевой модели и рекомендация, что потренировать дальше.
 
+Все данные синтетические (152-ФЗ): демо-сотрудники и штат из 35 вымышленных проводников.
+
+## Быстрый старт
+
+```bash
+docker compose up -d --build
+```
+
+| Что | Где |
+|---|---|
+| Тренажёр | [http://localhost:3000](http://localhost:3000) |
+| Swagger | [http://127.0.0.1:3000/api/docs](http://127.0.0.1:3000/api/docs), схема OpenAPI — `/api/docs-json` |
+| Схемы архитектуры одним PDF, без входа | [http://127.0.0.1:3000/architecture.pdf](http://127.0.0.1:3000/architecture.pdf) (файл — `web/public/architecture.pdf`) |
+| Проверка ядра | [http://127.0.0.1:4000/api/health](http://127.0.0.1:4000/api/health) |
+
+| Демо-аккаунт | Пароль | Роль |
+|---|---|---|
+| `user` | `user123` | `USER` — проводник, «Бригада 3», «Депо Москва-ВСМ» |
+| `manager` | `manager123` | `MANAGER` |
+| `admin` | `admin123` | `ADMIN` |
+
+Чтобы у рейтинга и репутации были данные, войдите `admin` и в «Администрирование → Состояние системы» нажмите «Сгенерировать» в карточке «Демо-история». Появятся прохождения за три недели у 35 синтетических проводников (`staff-01…35`, шесть бригад в двух депо) и у `user`. Повтор безопасен: у кого прохождения уже есть, тех ядро пропускает.
+
+- **Файл `.env` не нужен.** Если порт 5432, 4000 или 6379 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT`, `CORE_PORT` или `REDIS_PORT`.
+- **`db-init` в `docker compose ps -a` показывает `Exited (0)`** — так и должно быть: он настраивает роль ядра и завершается. Если он упал — `docker compose logs db-init`. Флаг `--wait` не используйте: Compose считает это завершение ошибкой.
+- **Сессия живёт 15 минут.** Для длинного показа поднимите `ACCESS_TTL` до `8h` в `docker-compose.yml` у сервиса `core`.
+
 ## Что реализовано по ТЗ
 
 | Требование | Как сделано | Где в коде |
@@ -17,38 +44,111 @@
 | Рейтинг бригады, депо и компании | опыт за месяц, место и разрыв до соседа | `core/src/gamification/rating.ts` |
 | Разбор решений | что повлияло на шкалы и как лучше — по каждому решению | поле `review` в сценариях |
 | Уведомления | тосты о новом уровне и ачивках через события Redis → SSE, центр уведомлений со счётчиком на колокольчике, плашка нового сценария | `core/src/events/`, `core/src/notifications/` |
-| Документированный API для HR и LMS | Swagger на `/api/docs`, события в Redis Stream | `core/src/common/swagger.ts` |
+| Документированный API для HR и LMS | Swagger на `/api/docs`, [справочник API](docs/api.md), события в Redis Stream | `core/src/common/swagger.ts` |
+
+## Архитектура
+
+Браузер работает только с веб-приложением, весь бэкенд — одно приложение Nest.js из модулей. Контент (сценарии и правила) — YAML-файлы, данные — Postgres, события — Redis Streams.
+
+```mermaid
+flowchart LR
+  browser["Браузер проводника<br/>телефон или компьютер"]
+  web["web · Next.js 16<br/>интерфейс, прокси /api/*"]
+  subgraph core["core · Nest.js 12 — одно приложение из модулей"]
+    auth["auth<br/>вход, сотрудники, бригады"]
+    scenarios["scenarios<br/>каталог и движок сценариев"]
+    gamification["gamification<br/>опыт, уровни, ачивки, рейтинг"]
+    analytics["analytics<br/>навыки и рекомендация"]
+    notifications["notifications<br/>центр уведомлений, прочитано"]
+    events["events<br/>Redis → SSE"]
+  end
+  content[("content/*.yaml<br/>сценарии и правила")]
+  postgres[("Postgres 17")]
+  redis[("Redis 8<br/>стрим events")]
+
+  browser -->|"HTTP, cookie сессии, SSE"| web
+  web -->|"/api/* через rewrites"| core
+  scenarios --> content
+  gamification --> content
+  analytics --> content
+  auth --> postgres
+  scenarios --> postgres
+  gamification --> postgres
+  notifications --> postgres
+  auth -->|"user.created, user.updated"| redis
+  scenarios -->|"scenario.completed"| redis
+  gamification -->|"progress.updated, notification.requested"| redis
+  notifications -->|"notifications.updated"| redis
+  redis -->|"группа core"| gamification
+  redis -->|"группа core"| notifications
+  redis --> events
+  analytics -.->|"сервисы модуля"| scenarios
+  gamification -.->|"штат для рейтинга"| auth
+  notifications -.->|"получатели broadcast"| auth
+```
+
+- **Браузер ходит только на `web`.** Next проксирует `/api/*` в ядро, поэтому cookie и SSE работают с одного адреса.
+- **Ядро — единственный бэкенд.** Модули подключаются строкой в `core/src/app.module.ts`.
+- **Модули не лезут в чужие таблицы.** Чужие данные — копией из события или через экспортированный сервис модуля.
+
+### Путь одного прохождения
+
+```mermaid
+sequenceDiagram
+  actor user as Проводник
+  participant web as web
+  participant sc as scenarios
+  participant db as Postgres
+  participant redis as Redis (events)
+  participant gm as gamification
+  participant nt as notifications
+  participant sse as events (SSE)
+
+  user->>web: «Начать»
+  web->>sc: POST /api/scenarios/runs
+  sc->>db: прохождение: первый узел, шкалы 50/50, время показа узла
+  sc-->>web: узел, варианты, таймер
+  loop каждое решение
+    user->>web: вариант (или время вышло)
+    web->>sc: POST /api/scenarios/runs/:id/choices
+    sc->>sc: движок: эффекты на шкалы (0–100), таймер с запасом 1,5 с, условный переход
+    sc->>db: решение и новое состояние — одной транзакцией
+    sc-->>web: следующий узел или финал с разбором
+  end
+  sc->>redis: scenario.completed (исход, шкалы, решения)
+  redis->>gm: группа core
+  gm->>db: запись в журнал (повтор отсекается по runId)
+  gm->>redis: progress.updated, notification.requested («Новый уровень», «Ачивка: …»)
+  redis->>sse: события с userId проводника
+  sse-->>web: тосты — главная перечитывает прогресс, рейтинг и навыки
+  redis->>nt: notification.requested, группа core
+  nt->>db: строка в центр уведомлений (повтор отсекается парой eventId + userId)
+  nt->>redis: notifications.updated
+  redis->>sse: событие с userId проводника
+  sse-->>web: колокольчик перечитывает список и счётчик
+```
+
+- **Движок сценариев — чистые функции** в `core/src/scenarios/engine.ts`: шкалы, условные переходы и таймер проверяются тестами без базы.
+- **Таймер считает сервер** по времени показа узла: выбор после дедлайна засчитывается как «время вышло».
+- **Сценарии не знают о геймификации.** Они публикуют `scenario.completed`, а опыт, ачивки и уведомления считают подписчики. Повтор события не удваивает опыт.
+
+Модули ядра, ключевые решения и безопасность — в [архитектуре](docs/architecture.md). Вход, доставка уведомлений и повтор событий — в [диаграммах последовательности](docs/sequences.md).
 
 ## Документы
 
-- [Архитектура](docs/architecture.md) — компоненты, модули, путь прохождения, ключевые решения.
-- [Диаграммы последовательности](docs/sequences.md) — вход и обновление токена, уведомления, повтор событий и DLQ; SVG для слайдов — в [docs/diagrams/](docs/diagrams/).
-- [User Flow и примеры сценариев](docs/user-flow.md) — путь проводника и администратора, граф сценария, три прохождения с цифрами.
-- API — Swagger на [http://127.0.0.1:3000/api/docs](http://127.0.0.1:3000/api/docs), справочник эндпоинтов — ниже.
-- [Ограничения и план развития](docs/limitations.md).
-- [Памятка к защите](docs/pitch.md) — сценарий показа, правки на лету, ответы на вопросы.
-- [Контент](docs/content.md) — формат сценариев и правил, рецепты правки на лету.
-- Для разработчиков: [онбординг](docs/onboarding.md), [база](docs/database.md), [события](docs/events.md), [ядро](core/README.md).
+| Документ | О чём |
+|---|---|
+| [Архитектура](docs/architecture.md) | модули ядра, ключевые решения, безопасность |
+| [Диаграммы последовательности](docs/sequences.md) | вход и обновление токена, уведомления, повтор событий и DLQ; SVG для слайдов — в [docs/diagrams/](docs/diagrams/) |
+| [User Flow и примеры сценариев](docs/user-flow.md) | путь проводника и администратора, граф сценария, три прохождения с цифрами |
+| [API](docs/api.md) | эндпоинты ядра, ошибки, токены; живая версия — Swagger |
+| [Ограничения и план развития](docs/limitations.md) | что упрощено в прототипе и как развивать |
+| [Контент](docs/content.md) | формат сценариев и правил, рецепты правки на лету |
+| [Памятка к защите](docs/pitch.md) | сценарий показа, правки на лету, ответы на вопросы |
 
-Все данные синтетические (152-ФЗ): демо-сотрудники и штат из 35 вымышленных проводников.
+Для разработчиков: [онбординг](docs/onboarding.md), [база данных](docs/database.md), [события](docs/events.md), [ядро](core/README.md), [фронт](web/README.md).
 
-## Быстрый старт
-
-```bash
-docker compose up -d --build
-```
-
-Тренажёр — [http://localhost:3000](http://localhost:3000). Демо-аккаунты — в разделе «Вход» ниже, проводник — `user` / `user123`. Чтобы у рейтинга и репутации были данные, войдите `admin` / `admin123` и в «Администрирование» нажмите «Сгенерировать» в карточке «Демо-история».
-
-Ядро отвечает на `http://127.0.0.1:4000/api/health`.
-
-Весь API с примерами ответов — в Swagger: [http://127.0.0.1:3000/api/docs](http://127.0.0.1:3000/api/docs), схема OpenAPI — `/api/docs-json`. После входа в тренажёр в этой же вкладке запросы «Try it out» идут с вашей сессией.
-
-Файл `.env` не нужен. Если порт 5432, 4000 или 6379 занят другим проектом, скопируйте `.env.example` в `.env` и поменяйте `POSTGRES_PORT`, `CORE_PORT` или `REDIS_PORT`.
-
-В `docker compose ps -a` сервис `db-init` показывает `Exited (0)`. Так и должно быть: он настраивает роль ядра и завершается. Если он упал, смотрите `docker compose logs db-init`. Флаг `--wait` не используйте: Compose считает завершение `db-init` ошибкой.
-
-### Разработка
+## Разработка
 
 ```bash
 npm run dev
@@ -56,162 +156,10 @@ npm run dev
 
 Команда из корня останавливает контейнер `web`, поднимает в Docker базу, Redis и ядро и запускает фронт на [http://localhost:3000](http://localhost:3000) с перезагрузкой при сохранении. Нужны зависимости фронта: один раз `npm --prefix web install`. Правки ядра так не подхватываются — пересоберите его: `docker compose up -d --build core`. Вернуться к полному Docker: `docker compose up -d --build`.
 
-## Ядро
-
-Ядро на Nest.js ([core/](core/README.md)) — весь бэкенд и единственная точка входа для фронта. Оно собрано из модулей Nest: вход и сотрудники, события, проверка здоровья и предметные модули — сценарии, геймификация, аналитика. Схема — в [архитектуре](docs/architecture.md), как написать модуль — в [онбординге](docs/onboarding.md).
-
-| Эндпоинт | Что делает |
-|---|---|
-| `GET /api/health` | `200 {"status":"ok","db":"up","redis":"up"}`, если ядро видит базу, иначе `503 DB_UNAVAILABLE`. Лежащий Redis даёт `"redis":"down"`, но ответ остаётся 200: без Redis ядро работает, только события не ходят |
-
-Если база лежит, эндпоинты, которым она нужна, отвечают `503 DB_UNAVAILABLE`.
-
-Все ошибки API приходят в одном формате `{"code": "NOT_FOUND", "message": "…"}`, ошибка валидации — `422 VALIDATION_ERROR`.
-
-## Вход
-
-Вход по логину: табельный номер, телефон или email, без учёта регистра. Роли: `USER`, `MANAGER`, `ADMIN`.
-
-| Демо-аккаунт | Пароль | Роль |
-|---|---|---|
-| `admin` | `admin123` | `ADMIN` |
-| `manager` | `manager123` | `MANAGER` |
-| `user` | `user123` | `USER` |
-
-При `SEED_DEMO_USERS=true` ядро заводит ещё 35 синтетических проводников `staff-01…35` в шести бригадах двух депо; `user` — в «Бригада 3», «Депо Москва-ВСМ». Прохождения за последние три недели штату и `user` создаёт кнопка «Сгенерировать» в «Администрирование → Состояние системы» (`POST /api/scenarios/demo-history`, только `ADMIN`). Повтор безопасен: сотрудников, у которых уже есть прохождения, ядро пропускает. Поэтому на чистой базе `user` тоже получает историю, и его главная сразу заполнена. Бригаду и депо администратор меняет в форме сотрудника.
-
-| Эндпоинт | Кто | Что делает |
-|---|---|---|
-| `POST /api/auth/login` `{login, password}` | все | `{user, accessToken, refreshToken}` и cookie |
-| `POST /api/auth/refresh` | все | новая пара токенов по cookie или `{refreshToken}` |
-| `POST /api/auth/logout` | все | отзывает refresh-токен, стирает cookie |
-| `GET /api/auth/me` | вошедший | профиль, включая `avatar` — id портрета или `null` |
-| `PATCH /api/auth/me` `{avatar}` | вошедший | сменить свой портрет: один из `conductor`, `chief`, `doctor`, `guard`, `elder`, `neighbour`, `man`, `redhead`, `woman` или `null` — инициалы |
-| `POST /api/auth/register` `{login, password, name, email?}` | все, если `REGISTRATION_OPEN=true` | регистрация с ролью `USER` |
-| `GET /api/users?ids=a,b` | вошедший | публичные `{id, name, role}`, например для рейтинга |
-| `POST /api/users`, `PATCH /api/users/:id` | `ADMIN` | завести сотрудника, изменить имя, email, роль или пароль |
-
-Токены:
-- access-токен (JWT) живёт `ACCESS_TTL`, по умолчанию 15 минут, и проверяется без базы;
-- refresh-токен живёт 30 дней. При обновлении выдаётся новый, старый ещё 30 секунд принимается, чтобы две вкладки не выкидывали пользователя;
-- браузеру хватает cookie `hb_access` и `hb_refresh` (httpOnly), остальные клиенты передают `Authorization: Bearer <accessToken>`.
-
-Памятка фронту:
-- `401 TOKEN_EXPIRED` → вызвать `POST /api/auth/refresh` и повторить запрос;
-- `401 REFRESH_INVALID` или `TOKEN_INVALID` → отправить на страницу входа;
-- `EventSource` (`/api/stream`) оборвался → вызвать refresh и переподключиться: статус ответа `EventSource` не показывает.
-
-На демо `ACCESS_TTL` можно поднять, например, до `8h`. Настройки входа лежат в `docker-compose.yml` у сервиса `core`.
-
-## Сценарии
-
-Сценарии тренажёра и справочники — YAML-файлы в [content/](content/). Ядро читает их при каждом запросе, поэтому правка файла видна сразу, без пересборки. Формат и правка при жюри — в [памятке по контенту](docs/content.md).
-
-| Эндпоинт | Кто | Что делает |
-|---|---|---|
-| `GET /api/scenarios` | вошедший | каталог `{items, total}` по порядку; сценарий — `{id, title, summary, category: {id, title}, carClass, durationMin, order, isNew, hasTimers, completed}`, где `completed` — вошедший хоть раз дошёл до финала |
-| `GET /api/scenarios/runs` | вошедший | свои завершённые прохождения, новые первыми (до 50): `{items: [{id, scenarioId, title, outcome, loyalty, safety, finishedAt}], total}`; `title: null` — сценарий убран из каталога. История в профиле |
-| `POST /api/scenarios/runs` `{scenarioId}` | вошедший | начать прохождение: `201` и его состояние |
-| `GET /api/scenarios/runs/:id` | владелец прохождения | состояние: текущий узел с вариантами и таймером (`remainingMs` считает сервер), шкалы `loyalty` и `safety`, последнее решение. После финала — исход, текст финала и разбор `decisions` |
-| `POST /api/scenarios/runs/:id/choices` `{choiceId?}` | владелец прохождения | решение в текущем узле; без `choiceId` — «время вышло». Выбор после дедлайна засчитывается как истёкшее время |
-
-Ошибки прохождения:
-- `404 SCENARIO_NOT_FOUND`, `404 RUN_NOT_FOUND` — так же отвечает и чужое прохождение;
-- `409 RUN_FINISHED` — прохождение уже завершено;
-- `409 RUN_CONFLICT` — решение уже принято, например при двойном клике;
-- `409 SCENARIO_CHANGED` — текущий узел убрали из YAML, прохождение нужно начать заново;
-- `422 CHOICE_NOT_FOUND`, `422 CHOICE_REQUIRED`, `422 TIMER_NOT_EXPIRED`.
-
-В финале публикуется событие `scenario.completed`, см. [памятку по событиям](docs/events.md).
-
-## Геймификация
-
-Модуль `gamification` подписан на `scenario.completed` и ведёт свой журнал прохождений; повтор события отсекается по `runId`. Опыт, уровень, репутация и ачивки считаются из журнала по правилам в [content/gamification.yaml](content/gamification.yaml) при каждом запросе, поэтому правка правил сразу пересчитывает всех. Формат — в [памятке по контенту](docs/content.md).
-
-| Эндпоинт | Кто | Что делает |
-|---|---|---|
-| `GET /api/gamification/me/progress` | вошедший | `{xp, lastRunXp, level, next, progress, levels, reputation, achievements}`: опыт, текущий и следующий уровень, доля пути к нему, шкала уровней и репутация — среднее итоговых `loyalty` и `safety` за последние прохождения с изменением за неделю (`null`, пока прохождений нет). `achievements` — `{earned, total, latest, next}`: сколько ачивок получено, последняя (`isNew` — получена последним прохождением) и следующая с прогрессом `share` 0–1 и подписью `text` (оба `null`, если промежуточного прогресса нет) |
-| `GET /api/gamification/me/achievements` | вошедший | полка профиля: `{items: [{id, title, description, earnedAt, share, text}], total}` — все ачивки в порядке YAML; у полученных `earnedAt` — дата прохождения, на котором условие выполнилось, у закрытых — прогресс как у «Следующей» |
-| `GET /api/gamification/runs/:runId/reward` | вошедший, своё прохождение | `{xp, achievements: [{id, title, description}]}`: опыт за прохождение и ачивки, полученные именно им. `404 REWARD_PENDING` — прохождения нет в журнале: событие ещё не обработано или прохождение было до запуска геймификации |
-| `GET /api/gamification/rating?scope=crew\|depot\|company` | вошедший | `{scope, title, month, items: [{place, userId, name, xp, isMe}], total, me}`: таблица своей бригады, своего депо или всей компании за текущий месяц. `me` — `{place, xp, gap}`, где `gap` — `{place, xp}` до места выше (`null` у первого); `me: null`, если в этом месяце прохождений не было. Другой `scope` — `422 VALIDATION_ERROR` |
-
-Рейтинг — опыт за календарный месяц по Москве, по тем же правилам `xp`. В таблицу попадают проводники штата (роль `USER` с бригадой), у которых есть прохождения за месяц. При равном опыте выше тот, кто набрал его раньше, поэтому места не повторяются. Правила мест — в `core/src/gamification/rating.ts`.
-
-После записи прохождения модуль публикует `progress.updated`, фронт по нему перечитывает прогресс и награду. При переходе на новый уровень проводник получает тост «Новый уровень: 120 км/ч», за каждую новую ачивку — «Ачивка: Первая помощь» с числом ачивок на полке.
-
-## Аналитика
-
-Модуль `analytics` считает навыки проводника — шаги ролевой модели, безопасность и хладнокровие — по его решениям в последних прохождениях и меткам `skills` у вариантов ответа. Своей таблицы у модуля нет: решения он берёт у модуля сценариев через `RunsService`, метки — из текущего YAML, поэтому правка меток сразу пересчитывает всех. Правила — в [памятке по контенту](docs/content.md#навыки).
-
-| Эндпоинт | Кто | Что делает |
-|---|---|---|
-| `GET /api/analytics/me/skills` | вошедший | `{skills: [{id, title, value, hits, tests}], runs, weakest, recommendation}`: процент верных решений по каждому навыку (`value: null`, если навык ещё не проверялся), слабый навык и `{scenarioId}` — сценарий, где он проверяется чаще всего |
-
-Фронт перечитывает навыки по `scenario.completed`. Главная карточка предлагает рекомендованный сценарий с причиной «Ваш слабый навык — …». Новичку она предлагает первый сценарий каталога, а если все проверенные навыки на 100% — следующий непройденный.
-
-## События и уведомления
-
-Модули ядра обмениваются событиями через Redis Streams: один стрим `events`, его читает группа `core`. Формат и правила — в [памятке по событиям](docs/events.md).
-
-**Уведомления в браузер** — `GET /api/stream` (SSE, только для вошедших, в браузере по cookie). В поток приходят:
-- события, адресованные пользователю (`userId`), и события для всех (`broadcast: true`). В `data` лежит конверт события;
-- именованное событие `ping` раз в 25 с, чтобы соединение не рвалось. Обработчик `onmessage` его не получает.
-
-Чтобы показать сотруднику уведомление, любой модуль ядра публикует `notification.requested` с его `userId` (или `broadcast: true` — всем). Браузер покажет тост, а модуль `notifications` сохранит уведомление в центр уведомлений:
-
-| Метод и путь | Кто | Что |
-|---|---|---|
-| `GET /api/notifications` | вошедший | `{items: [{id, title, message, level, createdAt, readAt}], total, unread}`: последние 50, новые сверху; `readAt: null` — не прочитано. Рассылка всем хранится строкой у каждого, поэтому «прочитано» у каждого своё |
-| `POST /api/notifications/read` | вошедший | отметить все прочитанными → `{unread: 0}` |
-
-Повтор того же события дубля не создаёт. После записи и после отметки ядро публикует `notifications.updated` — фронт перечитывает список и счётчик на колокольчике.
-
-**Если Redis лежит,** вход и сотрудники работают, события просто не отправляются (предупреждение в логе ядра). Когда Redis возвращается, ядро переподключается само.
-
-**Отладка:**
-```bash
-docker compose exec redis redis-cli -a redis_pass --no-auth-warning XRANGE events - +
-```
-```bash
-docker compose exec redis redis-cli -a redis_pass --no-auth-warning XINFO GROUPS events
-```
-```bash
-docker compose exec redis redis-cli -a redis_pass --no-auth-warning XPENDING events core
-```
-```bash
-docker compose exec redis redis-cli -a redis_pass --no-auth-warning XRANGE events:dlq - +
-```
-По порядку: последние события; группы и их отставание (`lag`); неподтверждённые события группы; события, которые не удалось обработать за 5 попыток.
-
-## База данных
-
-Один Postgres, одна база `app`. Бэкенд работает в схеме `public` под ролью `core_svc` (пароль `core_pass`), она же владелец базы. У каждого модуля ядра свои таблицы.
-
-Строка подключения: `postgres://core_svc:core_pass@localhost:5432/app`. Из контейнеров вместо `localhost` — `postgres`.
-
-Правила для таблиц модулей, миграции и отладка — в [памятке по базе данных](docs/database.md).
-
-### Снимок базы перед демо
-
-```bash
-# сохранить
-docker compose exec postgres pg_dump -U postgres -d app -Fc -f demo.dump
-docker compose cp postgres:demo.dump demo.dump
-
-# восстановить (сначала остановите сервисы приложения)
-docker compose cp demo.dump postgres:demo.dump
-docker compose exec postgres pg_restore -U postgres -d app --clean --if-exists demo.dump
-```
-
-Путь внутри контейнера относительный намеренно: Git Bash на Windows портит пути вида `/tmp/...`. Не сохраняйте дамп через `>` в PowerShell: он портит бинарный файл.
-
-### Полный сброс
-
-`docker compose down -v` удаляет все данные. Он нужен, только если поменялись параметры создания базы, например `POSTGRES_INITDB_ARGS`.
-
-## Новый модуль
-
-Предметная часть — модули ядра в `core/src/<name>/`, каждый подключается строкой в `core/src/app.module.ts`. Как написать модуль, работать с базой и событиями — в [онбординге](docs/onboarding.md).
+- **Проверки** в `core/` и `web/`: `npm test`, `npm run lint`, `npm run build`.
+- **Новый модуль ядра** — папка `core/src/<name>/` и строка в `core/src/app.module.ts`, по шагам — в [онбординге](docs/onboarding.md).
+- **Сценарии и правила** правятся в [content/](content/) без пересборки — [памятка по контенту](docs/content.md).
+- **База:** подключение `postgres://core_svc:core_pass@localhost:5432/app`, снимок перед демо и сброс — в [памятке по базе](docs/database.md#снимок-базы-перед-демо).
 
 ## Лицензия
 

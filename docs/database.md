@@ -62,7 +62,24 @@
   ```
 - Внутри psql: `\dt` — таблицы, `\d <таблица>` — её колонки и индексы.
 - В базах, созданных до перехода на один бэкенд, могут остаться пустые схемы `tpl_go` и `tpl_py` и роли `tpl_go_svc` и `tpl_py_svc`. Они ни на что не влияют. Удалять их — только с согласия человека.
-- Снимок базы перед демо и полный сброс — в [README](../README.md#база-данных).
+
+## Снимок базы перед демо
+
+```bash
+# сохранить
+docker compose exec postgres pg_dump -U postgres -d app -Fc -f demo.dump
+docker compose cp postgres:demo.dump demo.dump
+
+# восстановить (сначала остановите сервисы приложения)
+docker compose cp demo.dump postgres:demo.dump
+docker compose exec postgres pg_restore -U postgres -d app --clean --if-exists demo.dump
+```
+
+Путь внутри контейнера относительный намеренно: Git Bash на Windows портит пути вида `/tmp/...`. Не сохраняйте дамп через `>` в PowerShell: он портит бинарный файл.
+
+## Полный сброс
+
+`docker compose down -v` удаляет все данные. Он нужен, только если поменялись параметры создания базы, например `POSTGRES_INITDB_ARGS`.
 
 ## Правила для ИИ-агентов
 

@@ -1,6 +1,6 @@
 # core — ядро hackbox
 
-Nest.js 12 (ESM), Prisma 7, Node 24. Это весь бэкенд — одно приложение из модулей Nest. Что делает ядро и какие у него эндпоинты, описано в [корневом README](../README.md#ядро). Как добавить свой модуль — в [онбординге](../docs/onboarding.md).
+Nest.js 12 (ESM), Prisma 7, Node 24. Это весь бэкенд — одно приложение из модулей Nest. Схема модулей — в [корневом README](../README.md#архитектура), эндпоинты — в [справочнике API](../docs/api.md). Как добавить свой модуль — в [онбординге](../docs/onboarding.md).
 
 ## Запуск
 
@@ -39,6 +39,7 @@ npm run start:dev
 | `src/scenarios/` | `ScenariosModule`: каталог из `content/scenarios/*.yaml` (файлы читаются при каждом запросе) и прохождения `/api/scenarios/runs`. `script.ts` — формат диалога, `engine.ts` — правила: шкалы, переходы, таймер. `runs.service.ts` хранит прохождения и в финале публикует `scenario.completed`. Формат — в [памятке по контенту](../docs/content.md) |
 | `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация, `achievements.ts` — полученные ачивки, ачивки прохождения и прогресс к следующей, `rating.ts` — места за месяц. `GET /api/gamification/me/progress`, `GET /api/gamification/me/achievements`, `GET /api/gamification/runs/:runId/reward` и `GET /api/gamification/rating`, события `progress.updated` и тосты о новом уровне и ачивках |
 | `src/analytics/` | `AnalyticsModule`: навыки по решениям и меткам `skills` из `content/skills.yaml`. `skills.ts` — процент, слабый навык и рекомендация. Своей таблицы нет: решения — через `RunsService`, сценарии — через `ScenariosService`. `GET /api/analytics/me/skills` |
+| `src/notifications/` | `NotificationsModule`: подписан на `notification.requested`, пишет строку каждому получателю в `notifications_items`. `notification.ts` — получатели и содержимое. `GET /api/notifications` и `POST /api/notifications/read`, событие `notifications.updated` |
 | `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id`, `swagger.ts` — документ API на `/api/docs` (схемы DTO строит плагин в `nest-cli.json`) |
 | `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 

@@ -2,48 +2,12 @@
 
 Тренажёр проводника ВСМ-400: браузер работает только с веб-приложением, весь бэкенд — одно приложение Nest.js из модулей. Контент (сценарии и правила) — YAML-файлы, данные — Postgres, события — Redis Streams.
 
-## Компоненты
+## Схемы
 
-```mermaid
-flowchart LR
-  browser["Браузер проводника<br/>телефон или компьютер"]
-  web["web · Next.js 16<br/>интерфейс, прокси /api/*"]
-  subgraph core["core · Nest.js 12 — одно приложение из модулей"]
-    auth["auth<br/>вход, сотрудники, бригады"]
-    scenarios["scenarios<br/>каталог и движок сценариев"]
-    gamification["gamification<br/>опыт, уровни, ачивки, рейтинг"]
-    analytics["analytics<br/>навыки и рекомендация"]
-    notifications["notifications<br/>центр уведомлений, прочитано"]
-    events["events<br/>Redis → SSE"]
-  end
-  content[("content/*.yaml<br/>сценарии и правила")]
-  postgres[("Postgres 17")]
-  redis[("Redis 8<br/>стрим events")]
-
-  browser -->|"HTTP, cookie сессии, SSE"| web
-  web -->|"/api/* через rewrites"| core
-  scenarios --> content
-  gamification --> content
-  analytics --> content
-  auth --> postgres
-  scenarios --> postgres
-  gamification --> postgres
-  notifications --> postgres
-  auth -->|"user.created, user.updated"| redis
-  scenarios -->|"scenario.completed"| redis
-  gamification -->|"progress.updated, notification.requested"| redis
-  notifications -->|"notifications.updated"| redis
-  redis -->|"группа core"| gamification
-  redis -->|"группа core"| notifications
-  redis --> events
-  analytics -.->|"сервисы модуля"| scenarios
-  gamification -.->|"штат для рейтинга"| auth
-  notifications -.->|"получатели broadcast"| auth
-```
-
-- **Браузер ходит только на `web`.** Next проксирует `/api/*` в ядро, поэтому cookie и SSE работают с одного адреса.
-- **Ядро — единственный бэкенд.** Модули подключаются строкой в `core/src/app.module.ts`.
-- **Swagger** — `/api/docs`, описаны все эндпоинты ([README](../README.md#быстрый-старт)).
+- **Схема компонентов и путь одного прохождения** — в [README](../README.md#архитектура), чтобы их было видно сразу на GitHub.
+- **Вход, доставка уведомлений, повтор событий и DLQ** — в [диаграммах последовательности](sequences.md).
+- **Для слайдов:** обе схемы из README одним PDF — `/architecture.pdf` на сайте (`web/public/architecture.pdf`), SVG — в [docs/diagrams/](diagrams/).
+- **API** — Swagger на `/api/docs` и [справочник](api.md).
 
 ## Модули ядра
 
@@ -56,48 +20,11 @@ flowchart LR
 | `notifications` | центр уведомлений: строка каждому получателю из `notification.requested`, список и счётчик непрочитанных, «прочитано» | `notifications_items` | `notification.ts` — получатели и содержимое |
 | `events` | публикация в стрим `events`, чтение группой `core` с повторами и DLQ, доставка в браузер по SSE | Redis | [docs/events.md](events.md) |
 
+Служебные модули `PrismaModule` (подключение к базе) и `HealthModule` (`GET /api/health`) — в [онбординге](onboarding.md#3-как-устроено-ядро).
+
 **Модули не лезут в чужие таблицы** и не связываются через JOIN ([docs/database.md](database.md)). Чужие данные берутся двумя способами:
 - **копией из события** — геймификация ведёт свой журнал из `scenario.completed`;
 - **через экспортированный сервис** — аналитика читает решения через `RunsService`, рейтинг берёт штат через `UsersService`, уведомления — получателей рассылки на всех.
-
-## Путь одного прохождения
-
-```mermaid
-sequenceDiagram
-  actor user as Проводник
-  participant web as web
-  participant sc as scenarios
-  participant db as Postgres
-  participant redis as Redis (events)
-  participant gm as gamification
-  participant nt as notifications
-  participant sse as events (SSE)
-
-  user->>web: «Начать»
-  web->>sc: POST /api/scenarios/runs
-  sc->>db: прохождение: первый узел, шкалы 50/50, время показа узла
-  sc-->>web: узел, варианты, таймер
-  loop каждое решение
-    user->>web: вариант (или время вышло)
-    web->>sc: POST /api/scenarios/runs/:id/choices
-    sc->>sc: движок: эффекты на шкалы (0–100), таймер с запасом 1,5 с, условный переход
-    sc->>db: решение и новое состояние — одной транзакцией
-    sc-->>web: следующий узел или финал с разбором
-  end
-  sc->>redis: scenario.completed (исход, шкалы, решения)
-  redis->>gm: группа core
-  gm->>db: запись в журнал (повтор отсекается по runId)
-  gm->>redis: progress.updated, notification.requested («Новый уровень», «Ачивка: …»)
-  redis->>sse: события с userId проводника
-  sse-->>web: тосты — главная перечитывает прогресс, рейтинг и навыки
-  redis->>nt: notification.requested, группа core
-  nt->>db: строка в центр уведомлений (повтор отсекается парой eventId + userId)
-  nt->>redis: notifications.updated
-  redis->>sse: событие с userId проводника
-  sse-->>web: колокольчик перечитывает список и счётчик
-```
-
-Вход с обновлением токена, путь уведомления и повтор событий с DLQ — в [диаграммах последовательности](sequences.md).
 
 ## Ключевые решения
 
