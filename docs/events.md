@@ -64,13 +64,14 @@ onModuleInit(): void {
 
 - `GET /api/stream` — SSE только для вошедших. В `data` лежит конверт события. Раз в 25 с приходит именованное событие `ping`, чтобы соединение не рвалось: обработчик `onmessage` его не получает.
 - На фронте одно подключение на всё приложение — `EventStreamProvider` в `web/src/lib/events.tsx`. Реакции на типы событий — там же: тосты, перечитывание прогресса, навыков и сотрудников.
-- `notification.requested` фронт показывает тостом сам.
+- `notification.requested` фронт показывает тостом сам, а модуль `notifications` сохраняет его в центр уведомлений.
 
 ## Стандартные события
 
 | Тип | Кто публикует | `data` | Что происходит |
 |---|---|---|---|
-| `notification.requested` | любой модуль | `{title, message, level: "info" \| "success" \| "warning"}` | тост в браузере. Нужен `userId` или `broadcast: true`, иначе событие уйдёт в DLQ |
+| `notification.requested` | любой модуль | `{title, message, level: "info" \| "success" \| "warning"}` | тост в браузере и строка в центре уведомлений (`NotificationsService`; broadcast — строка каждому сотруднику). Нужен `userId` или `broadcast: true`, иначе событие уйдёт в DLQ |
+| `notifications.updated` | центр уведомлений (`NotificationsService`), после записи уведомления и после отметки «прочитано» | `{}` | фронт перечитывает список уведомлений и счётчик на колокольчике |
 | `user.created`, `user.updated` | вход и сотрудники (`UsersService`) | `{id, name, role}` | фронт перечитывает список сотрудников |
 | `progress.updated` | геймификация (`GamificationService`), после записи прохождения в журнал | `{runId}` | фронт перечитывает уровень, репутацию, ачивки и награду в разборе |
 | `scenario.completed` | сценарии (`RunsService`), в финале прохождения | `{runId, scenarioId, category, outcome, loyalty, safety, timeouts, timedDecisions, durationSec, finishedAt, decisions: [{nodeId, choiceId, timedOut, loyaltyDelta, safetyDelta}]}` | прохождение завершено. `timedDecisions` — сколько решений было на время. В конверте `userId` проводника, поэтому событие приходит и в его браузер. Его читает геймификация: журнал для опыта, уровня, репутации и ачивок. Фронт по нему перечитывает навыки |

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ANALYTICS_KEY } from "./analytics";
 import { refreshSession } from "./api";
 import { GAMIFICATION_KEY } from "./gamification";
+import { NOTIFICATIONS_KEY } from "./notifications";
 
 // Событие из SSE /api/stream — конверт события (docs/events.md)
 interface AppEvent {
@@ -26,7 +27,7 @@ interface Notification {
 
 // Одно подключение к /api/stream на всё приложение.
 // Уведомления → тосты, user.* → перечитать сотрудников, progress.updated → перечитать прогресс и награду,
-// scenario.completed → перечитать навыки.
+// scenario.completed → перечитать навыки, notifications.updated → перечитать центр уведомлений.
 // При обрыве: закрыть, обновить сессию и переподключиться с паузой 1…10 с
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -48,6 +49,8 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEY });
       } else if (event.type === "scenario.completed") {
         void queryClient.invalidateQueries({ queryKey: ANALYTICS_KEY });
+      } else if (event.type === "notifications.updated") {
+        void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
       }
     };
 

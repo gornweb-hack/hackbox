@@ -122,3 +122,26 @@ model GamificationRun {
   @@index([userId, finishedAt])
   @@map("gamification_runs")
 }
+
+// ---------- notifications: центр уведомлений ----------
+
+// Уведомление сотруднику — копия события notification.requested. Рассылка всем (broadcast)
+// раскладывается по строке на каждого, поэтому «прочитано» у каждого своё
+model NotificationItem {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  // id события: повторная доставка того же события не создаёт дубль
+  eventId   String    @map("event_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  title     String
+  message   String    @default("")
+  // info, success или warning — как в событии
+  level     String    @default("info")
+  // Время события, а не время записи
+  createdAt DateTime  @map("created_at") @db.Timestamptz(3)
+  // null — ещё не прочитано
+  readAt    DateTime? @map("read_at") @db.Timestamptz(3)
+
+  @@unique([eventId, userId])
+  @@index([userId, createdAt])
+  @@map("notifications_items")
+}

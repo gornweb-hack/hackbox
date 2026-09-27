@@ -12,8 +12,9 @@ import {
 import { type Me, useLogout } from "@/lib/auth";
 import { useProgress } from "@/lib/gamification";
 import { initials } from "@/lib/names";
+import { useNotifications } from "@/lib/notifications";
 
-// Шапка над содержимым: кто вошёл, его уровень и бригада, уведомления.
+// Шапка над содержимым: кто вошёл, его уровень и бригада, колокольчик со счётчиком непрочитанных.
 // Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар
 export function ProfileHeader({ me }: { me: Me }) {
   const logout = useLogout();
@@ -21,6 +22,7 @@ export function ProfileHeader({ me }: { me: Me }) {
   const { data: progress } = useProgress();
   // «Бригада 3 · Депо Москва-ВСМ»; у сотрудника без бригады строки нет
   const crew = [me.crew, me.depot].filter(Boolean).join(" · ");
+  const unread = useNotifications().data?.unread ?? 0;
 
   return (
     <header className="flex items-center gap-3.5 px-1 pt-2 pb-2.5 lg:p-0 lg:pb-1">
@@ -59,10 +61,15 @@ export function ProfileHeader({ me }: { me: Me }) {
 
       <Link
         href="/notifications"
-        aria-label="Уведомления"
+        aria-label={unread > 0 ? `Уведомления: непрочитанных ${unread}` : "Уведомления"}
         className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted"
       >
         <BellIcon className="size-5" />
+        {unread > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-zone-red px-1 text-[11px] font-semibold text-white">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
       </Link>
     </header>
   );
