@@ -3,7 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +142,9 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
     s.raf = requestAnimationFrame(step);
   }
 
+  // Эффекту нужен kick из последнего рендера (он читает reduced), а перезапуск — только при смене пункта
+  const startDrop = useEffectEvent(kick);
+
   // Активный пункт задаёт адрес: капля едет к нему и после ссылок вне бара.
   // На страницах вне бара (уведомления, администрирование) капля скрыта
   useEffect(() => {
@@ -149,9 +152,7 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
     if (s.pressed) return;
     s.shown = active >= 0;
     if (active >= 0) s.target = active;
-    kick();
-    // kick читает только ref, перезапуск нужен лишь при смене пункта
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    startDrop();
   }, [active]);
 
   useEffect(() => {
