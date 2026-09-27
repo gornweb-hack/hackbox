@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronRightIcon, TargetIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, TargetIcon } from "lucide-react";
 import Link from "next/link";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { EarnedTile, LockedTile } from "@/components/achievements/achievement-tiles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { anyTested, trainingOf, useSkills } from "@/lib/analytics";
@@ -155,9 +155,13 @@ function Shelf() {
   );
 }
 
+// Сколько прохождений видно до «Смотреть больше»: история длинная и уводит профиль вниз
+const HISTORY_PREVIEW = 3;
+
 // История: исход, итоговые шкалы и ссылка на разбор каждого прохождения
 function History() {
   const { data: history, isPending, isError } = useRunHistory();
+  const [expanded, setExpanded] = useState(false);
   if (isPending) return <Skeleton className="h-60 rounded-lg" />;
   if (isError) return <Unavailable what="Прохождения" />;
   if (history.items.length === 0) {
@@ -171,30 +175,50 @@ function History() {
     );
   }
 
+  const hidden = history.items.length - HISTORY_PREVIEW;
+  const runs = expanded ? history.items : history.items.slice(0, HISTORY_PREVIEW);
+
   return (
-    <ul className="-mx-2 flex flex-col">
-      {history.items.map((run) => (
-        <li key={run.id}>
-          <Link
-            href={`/scenarios/runs/${run.id}`}
-            className="flex min-h-14 items-center gap-3 rounded-md px-2 py-2 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+    <>
+      <ul id="history-list" className="-mx-2 flex flex-col">
+        {runs.map((run, i) => (
+          <li
+            key={run.id}
+            className={cn(i >= HISTORY_PREVIEW && "duration-200 motion-safe:animate-in motion-safe:fade-in")}
           >
-            <span aria-hidden className={cn("size-2.5 shrink-0 rounded-full", OUTCOME_DOTS[run.outcome])} />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-[15px] font-medium">{run.title ?? "Сценарий убран из каталога"}</span>
-              <span className="text-[13px] text-muted-foreground">
-                {OUTCOME_TITLES[run.outcome]} · {dateTime.format(new Date(run.finishedAt))}
+            <Link
+              href={`/scenarios/runs/${run.id}`}
+              className="flex min-h-14 items-center gap-3 rounded-md px-2 py-2 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <span aria-hidden className={cn("size-2.5 shrink-0 rounded-full", OUTCOME_DOTS[run.outcome])} />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-[15px] font-medium">{run.title ?? "Сценарий убран из каталога"}</span>
+                <span className="text-[13px] text-muted-foreground">
+                  {OUTCOME_TITLES[run.outcome]} · {dateTime.format(new Date(run.finishedAt))}
+                </span>
               </span>
-            </span>
-            <span className="hidden shrink-0 text-right text-[13px] text-muted-foreground sm:block">
-              {SCALE_TITLES.loyalty} {run.loyalty}
-              <br />
-              {SCALE_TITLES.safety} {run.safety}
-            </span>
-            <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
-          </Link>
-        </li>
-      ))}
-    </ul>
+              <span className="hidden shrink-0 text-right text-[13px] text-muted-foreground sm:block">
+                {SCALE_TITLES.loyalty} {run.loyalty}
+                <br />
+                {SCALE_TITLES.safety} {run.safety}
+              </span>
+              <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls="history-list"
+          onClick={() => setExpanded(!expanded)}
+          className="flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-[15px] font-medium transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:self-start"
+        >
+          {expanded ? "Свернуть" : `Смотреть больше · ${hidden}`}
+          <ChevronDownIcon className={cn("size-4 transition-transform", expanded && "rotate-180")} />
+        </button>
+      )}
+    </>
   );
 }
