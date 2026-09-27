@@ -3,7 +3,7 @@
 import { ArrowLeftIcon, RotateCcwIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { UnattendedItemGame } from "@/components/games/unattended-item-game";
+import { UnattendedItemGame } from "@/components/games/unattended-item/unattended-item-game";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ITEMS, type Outcome, type Result } from "@/games/unattended-item/rules";
 import { formatDelta } from "@/lib/scales";
@@ -15,7 +15,7 @@ const OUTCOMES: Record<Outcome, { title: string; ink: string }> = {
   bad: { title: "Вернуться и повторить", ink: "text-zone-red" },
 };
 
-// Страница мини-игры: холст Phaser и разбор после финала. «Сыграть ещё раз» пересоздаёт игру
+// Страница мини-игры: вагон и разбор после финала. «Сыграть ещё раз» пересоздаёт игру
 export default function UnattendedItemPage() {
   const [round, setRound] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
@@ -42,15 +42,15 @@ export default function UnattendedItemPage() {
       <UnattendedItemGame key={round} onFinish={setResult} />
 
       {result && (
-        <section className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-card motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
+        <section className="glass relative flex flex-col gap-3 rounded-xl p-5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
           <span className="text-[12px] font-medium text-muted-foreground">
             {ITEMS[result.kind].title} · памятка, {ITEMS[result.kind].memo}
           </span>
           <h2 className={cn("-mt-2 text-lg font-semibold", OUTCOMES[result.outcome].ink)}>{OUTCOMES[result.outcome].title}</h2>
-          <p className="rounded-lg bg-hero px-4 py-3 text-[15px] leading-snug text-white">{result.ending}</p>
+          <p className="glass-inner rounded-[20px] px-4 py-3 text-[15px] leading-snug">{result.ending}</p>
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="rounded-md border px-2.5 py-1">Безопасность {formatDelta(result.safetyDelta)}</span>
-            <span className="rounded-md border px-2.5 py-1">Лояльность {formatDelta(result.loyaltyDelta)}</span>
+            <span className="glass-inner rounded-full border px-3 py-1">Безопасность {formatDelta(result.safetyDelta)}</span>
+            <span className="glass-inner rounded-full border px-3 py-1">Лояльность {formatDelta(result.loyaltyDelta)}</span>
           </div>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-[15px] leading-snug">
             {result.notes.map((note) => (
@@ -59,11 +59,11 @@ export default function UnattendedItemPage() {
           </ul>
           <p className="text-[13px] text-muted-foreground">Тренировка: результат мини-игры не меняет опыт и шкалы профиля.</p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={again} className="h-11 gap-2 px-5 text-[15px]">
+            <Button onClick={again} size="lg">
               <RotateCcwIcon className="size-4" />
               Сыграть ещё раз
             </Button>
-            <Link href="/scenarios" className={cn(buttonVariants({ variant: "outline" }), "h-11 px-5 text-[15px]")}>
+            <Link href="/scenarios" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "glass-inner border-border")}>
               К сценариям
             </Link>
           </div>
