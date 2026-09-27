@@ -68,7 +68,10 @@ export class DemoHistoryService {
 
     let users = 0;
     let runs = 0;
+    // Демо-сотрудника не заполняем: под ним жюри проходит сценарии с нуля и видит свой рост в рейтинге
+    const demoUser = await this.users.findByLogin('user');
     for (const member of await this.users.listStaff()) {
+      if (member.id === demoUser?.id) continue;
       const done = await this.prisma.scenarioRun.count({ where: { userId: member.id, finishedAt: { not: null } } });
       if (done > 0) continue;
 
