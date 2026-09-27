@@ -27,7 +27,9 @@ export function RewardCard({ reward }: { reward: Reward }) {
   return (
     <section className="flex flex-col gap-4 rounded-xl bg-hero px-5 pt-5 pb-5 motion-safe:animate-in motion-safe:fade-in fill-mode-both">
       <span className="text-[15px] text-[#9aa3b2]">Награда за прохождение</span>
-      <p className="text-[34px] leading-none font-semibold tracking-[-0.025em] text-white">+{xp} опыта</p>
+      <p className="text-[34px] leading-none font-semibold tracking-[-0.025em] text-white">
+        <span className="font-mono text-amber tabular-nums">+{xp}</span> опыта
+      </p>
       {reward.achievements.map((achievement, index) => (
         <div
           key={achievement.id}

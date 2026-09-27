@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenIcon, HouseIcon, type LucideIcon, TrophyIcon, UserIcon } from "lucide-react";
+import { BookOpenIcon, Gamepad2Icon, HouseIcon, TrophyIcon, UserIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -20,6 +20,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: "/", label: "Главная", icon: HouseIcon },
   { href: "/scenarios", label: "Сценарии", icon: BookOpenIcon },
+  { href: "/games", label: "Мини-игры", icon: Gamepad2Icon },
   { href: "/rating", label: "Рейтинг", icon: TrophyIcon },
   { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
@@ -106,7 +107,7 @@ function Sidebar() {
 function BottomNav() {
   const isActive = useActive();
   return (
-    <nav className="sticky bottom-0 z-40 grid grid-cols-4 border-t bg-card px-2 py-1.5 lg:hidden">
+    <nav className="sticky bottom-0 z-40 grid grid-cols-5 border-t bg-card px-2 py-1.5 lg:hidden">
       {NAV.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}

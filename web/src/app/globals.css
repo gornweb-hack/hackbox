@@ -34,6 +34,12 @@
   --color-zone-red: var(--zone-red);
   --color-zone-yellow: var(--zone-yellow);
   --color-zone-green: var(--zone-green);
+  --color-zone-red-soft: var(--zone-red-soft);
+  --color-zone-yellow-soft: var(--zone-yellow-soft);
+  --color-zone-yellow-text: var(--zone-yellow-text);
+  --color-zone-green-soft: var(--zone-green-soft);
+  --color-amber: var(--amber);
+  --color-ink: var(--ink);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -106,8 +112,11 @@
   }
 }
 
-/* Токены дизайна «Рейс 400». Только светлая тема.
-   Красный, жёлтый и зелёный — только для зон шкал репутации, остальные акценты — primary */
+/* Токены дизайна «Рейс 400». Только светлая тема. У каждого цвета одна роль:
+   primary — действия и пройденный путь (кнопки, ссылки, рельсы, прогресс), не оценки;
+   красный, жёлтый, зелёный — оценки: зоны шкал, навыки, штампы «Отлично» и «Вернуться»;
+   amber — цифры на тёмном фоне, как на вокзальном табло; ink — чернила штампа «Зачтено».
+   Цвета иллюстраций в components/run/scene — рисунок, а не токены */
 :root {
   --background: #f3f4f6;
   --foreground: #121418;
@@ -140,6 +149,15 @@
   --zone-red: #d63b3b;
   --zone-yellow: #e3a008;
   --zone-green: #1f9d55;
+  /* Подложки зон и тёмный жёлтый для текста: #e3a008 текстом на белом не читается */
+  --zone-red-soft: #fdeeee;
+  --zone-yellow-soft: #fdf6e3;
+  --zone-yellow-text: #8a5a00;
+  --zone-green-soft: #e8f6ee;
+  /* Табло: только цифры на тёмном фоне (км/ч, опыт). На белом не используется */
+  --amber: #ffb020;
+  /* Чернила компостера для штампа «Зачтено» — исход «с замечаниями» */
+  --ink: #5b45c9;
   --radius: 12px;
 }
 
