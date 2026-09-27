@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const ICONS = { loyalty: SmileIcon, safety: ShieldIcon };
 const TONES = { red: "bg-zone-red", yellow: "bg-zone-yellow", green: "bg-zone-green" };
 
-// Шкала по макету (блок «Репутация»): иконка, название, зона, значение, полоса с зонами.
+// Шкала по макету (блок «Репутация»): иконка, название, зона, значение, полоса с границами зон и числами.
 // Смысл не передаётся одним цветом — у шкалы есть иконка, подпись зоны и число.
 // delta — изменение: после решения в прохождении или за неделю в репутации (deltaLabel — «за неделю»)
 export function ScaleMeter({
@@ -62,11 +62,6 @@ export function ScaleMeter({
           />
           <div className="absolute inset-y-0 left-[30%] w-0.5 bg-card" />
           <div className="absolute inset-y-0 left-[60%] w-0.5 bg-card" />
-        </div>
-        <div aria-hidden className="grid grid-cols-[30fr_30fr_40fr] gap-0.5">
-          <span className="h-[3px] rounded-sm bg-zone-red opacity-60" />
-          <span className="h-[3px] rounded-sm bg-zone-yellow opacity-60" />
-          <span className="h-[3px] rounded-sm bg-zone-green opacity-60" />
         </div>
         <div aria-hidden className="relative h-3.5 text-[11px] text-muted-foreground">
           <span className="absolute left-0">0</span>
