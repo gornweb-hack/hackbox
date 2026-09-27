@@ -291,7 +291,7 @@
   }
 }
 
-/* Фон под стеклом: графитовые тени, белые блики и три наклонные линии −8° — след скорости.
+/* Фон под стеклом: графитовые тени и белые блики.
    Без него стекло превращается в серую плашку. Один на страницу, лежит под контентом */
 @layer components {
   .page-backdrop {
@@ -340,27 +340,6 @@
     width: 520px;
     height: 520px;
     background: radial-gradient(circle, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0) 66%);
-  }
-  .page-backdrop b {
-    position: absolute;
-    left: -10%;
-    width: 120%;
-    transform: rotate(-8deg);
-  }
-  .page-backdrop b:nth-of-type(1) {
-    top: 340px;
-    height: 2px;
-    background: rgb(18 20 24 / 0.16);
-  }
-  .page-backdrop b:nth-of-type(2) {
-    top: 372px;
-    height: 1px;
-    background: rgb(18 20 24 / 0.1);
-  }
-  .page-backdrop b:nth-of-type(3) {
-    top: 47%;
-    height: 2px;
-    background: rgb(18 20 24 / 0.12);
   }
 }
 

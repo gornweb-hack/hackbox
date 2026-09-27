@@ -1,4 +1,4 @@
-// Фон под стеклом: пять пятен света и тени и три наклонные линии скорости. Стили — .page-backdrop в globals.css
+// Фон под стеклом: пять мягких пятен света и тени. Стили — .page-backdrop в globals.css
 export function PageBackdrop() {
   return (
     <div aria-hidden className="page-backdrop">
@@ -7,9 +7,6 @@ export function PageBackdrop() {
       <i />
       <i />
       <i />
-      <b />
-      <b />
-      <b />
     </div>
   );
 }
