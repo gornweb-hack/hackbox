@@ -3,6 +3,7 @@
 import { TargetIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { anyTested, type SkillScore, type Skills, trainingOf, useSkills } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -97,7 +98,7 @@ function SkillsBody({ skills }: { skills: Skills }) {
           {weakPoint && (
             <>
               <circle cx={weakPoint[0]} cy={weakPoint[1]} r={10} className="fill-primary" fillOpacity={0.16} />
-              <circle cx={weakPoint[0]} cy={weakPoint[1]} r={5} className="fill-card stroke-primary" strokeWidth={2.5} />
+              <circle cx={weakPoint[0]} cy={weakPoint[1]} r={5} className="fill-white stroke-primary" strokeWidth={2.5} />
             </>
           )}
         </svg>
@@ -115,7 +116,7 @@ function SkillsBody({ skills }: { skills: Skills }) {
                 top: `${((CY + Math.sin(angle) * LABEL_R) / HEIGHT) * 100}%`,
               }}
               className={cn(
-                "absolute flex min-h-11 w-[104px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-md border border-transparent px-1 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary aria-pressed:border-border-strong",
+                "absolute flex min-h-11 w-[104px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-lg border border-transparent px-1 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary aria-pressed:border-white aria-pressed:bg-muted",
                 weak && "border-primary-soft-border bg-primary-soft text-primary-text hover:bg-primary-soft",
               )}
             >
@@ -135,7 +136,7 @@ function SkillsBody({ skills }: { skills: Skills }) {
       {training && (
         <Link
           href={`/scenarios/${training.scenarioId}`}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border border-primary-soft-border bg-primary-soft px-4 text-[15px] font-semibold text-primary-text transition-colors outline-none hover:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+          className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "h-auto min-h-[50px] py-3 text-center whitespace-normal")}
         >
           <TargetIcon className="size-[18px]" />
           Потренировать: {training.skill.title.toLowerCase()}

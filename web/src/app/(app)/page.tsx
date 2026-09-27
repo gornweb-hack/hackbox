@@ -39,7 +39,7 @@ export default function HomePage() {
             <Skeleton className="h-72 rounded-xl" />
           </>
         ) : isError || scenarios.length === 0 ? (
-          <p className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">
+          <p className="rounded-[20px] border border-dashed border-border-strong p-5 text-sm text-muted-foreground">
             {isError ? "Каталог сценариев недоступен. Обновите страницу чуть позже." : "Сценариев пока нет."}
           </p>
         ) : (

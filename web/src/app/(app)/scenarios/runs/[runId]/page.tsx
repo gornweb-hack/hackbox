@@ -10,7 +10,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
 import { useRun } from "@/lib/runs";
-import { cn } from "@/lib/utils";
 
 // Прохождение по адресу: пока идёт — плеер, после финала — разбор. Перезагрузка продолжает с того же места
 export default function RunPage() {
@@ -31,7 +30,7 @@ export default function RunPage() {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3">
         <p className="text-sm text-muted-foreground">{message}</p>
-        <Link href="/scenarios" className={cn(buttonVariants({ variant: "outline" }), "h-11 px-5 text-[15px]")}>
+        <Link href="/scenarios" className={buttonVariants({ variant: "outline" })}>
           Все сценарии
         </Link>
       </div>

@@ -2,14 +2,17 @@ import { DumbbellIcon, ListIcon, PlayIcon, TargetIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ScenarioTags } from "@/components/scenario-tags";
+import { buttonVariants } from "@/components/ui/button";
 import type { Training } from "@/lib/analytics";
 import { heroState, type Scenario } from "@/lib/scenarios";
+import { cn } from "@/lib/utils";
 
-// «Световые линии» — след поезда на скорости: положение, длина и самая яркая точка градиента
+// «Световые линии» — след поезда на скорости: положение, длина и яркость. Белые, а не синие:
+// синий в системе только у действий и прогресса
 const LINES = [
-  { top: 30, right: -30, width: 280, peak: 0.95, at: 75 },
-  { top: 42, right: 30, width: 170, peak: 0.55, at: 70 },
-  { top: 58, right: -10, width: 340, peak: 0.3, at: 80 },
+  { top: 30, right: -30, width: 280, alpha: 0.28 },
+  { top: 42, right: 30, width: 170, alpha: 0.16 },
+  { top: 58, right: -10, width: 340, alpha: 0.09 },
 ];
 
 // Главная карточка — вход в следующую тренировку. Новичку — первый сценарий (кадр 1b),
@@ -48,7 +51,7 @@ export function HeroCard({ scenarios, training }: { scenarios: Scenario[]; train
               <DumbbellIcon className="size-4 text-[#93b2ff]" />
               Тренирует: <span className="font-medium text-white">{skill.title}</span>
             </span>
-            <span className="flex items-center gap-2.5 rounded-lg bg-white/7 px-3.5 py-3 text-sm text-white">
+            <span className="flex items-center gap-2.5 rounded-lg border border-[rgb(147_178_255/.3)] bg-[rgb(46_100_255/.16)] px-4 py-3 text-sm text-[#dde6ff] shadow-[inset_0_1px_0_rgb(255_255_255/.12)]">
               <TargetIcon className="size-[18px] shrink-0 text-[#93b2ff]" />
               Ваш слабый навык — {skill.title}, {skill.value}%
             </span>
@@ -103,7 +106,7 @@ function Frame({
   cta: ReactNode;
 }) {
   return (
-    <section className="relative flex flex-1 flex-col gap-4 overflow-hidden rounded-xl bg-hero px-5 pt-[22px] pb-5 text-[#f3f5f8]">
+    <section className="glass-dark relative flex flex-1 flex-col gap-4 overflow-hidden rounded-2xl px-[22px] pt-6 pb-[22px]">
       {LINES.map((line) => (
         <div
           key={line.top}
@@ -113,7 +116,7 @@ function Frame({
             top: line.top,
             right: line.right,
             width: line.width,
-            background: `linear-gradient(90deg, rgb(90 135 255 / 0), rgb(90 135 255 / ${line.peak}) ${line.at}%, rgb(90 135 255 / 0))`,
+            background: `rgb(255 255 255 / ${line.alpha})`,
           }}
         />
       ))}
@@ -128,7 +131,10 @@ function Frame({
       {reason && <div className="relative flex flex-col items-start gap-3">{reason}</div>}
       <Link
         href={href}
-        className="relative flex h-[52px] w-full items-center justify-center gap-2.5 self-start rounded-lg bg-primary px-[26px] text-base font-semibold text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/.08),0_8px_24px_-10px_rgb(46_100_255/.9)] transition-colors outline-none hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#93b2ff] active:scale-[.99] active:bg-primary-press lg:w-auto lg:min-w-[200px]"
+        className={cn(
+          buttonVariants({ size: "xl" }),
+          "w-full self-start focus-visible:ring-[#93b2ff] focus-visible:ring-offset-hero lg:w-auto lg:min-w-[200px]",
+        )}
       >
         {cta}
       </Link>

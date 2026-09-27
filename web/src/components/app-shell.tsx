@@ -22,7 +22,7 @@ const NAV: NavItem[] = [
   { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-// Каркас для вошедших: заставка «Разгон до 400», сайдбар на десктопе, таб-бар «Капля» на телефоне,
+// Каркас для вошедших: заставка «Разгон до 400», стеклянный сайдбар на десктопе, таб-бар «Капля» на телефоне,
 // шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
@@ -111,7 +111,7 @@ function useActive() {
 function Sidebar() {
   const isActive = useActive();
   return (
-    <aside className="sticky top-0 hidden h-svh w-[248px] shrink-0 flex-col gap-7 border-r bg-card px-4 py-7 lg:flex">
+    <aside className="glass sticky top-4 m-4 mr-0 hidden h-[calc(100svh-32px)] w-[248px] shrink-0 flex-col gap-7 rounded-2xl px-4 py-7 lg:flex">
       <Link href="/" className="flex items-center gap-2.5 px-2.5">
         {/* Логотип — «след скорости»: три линии, короче и прозрачнее к хвосту */}
         <span aria-hidden className="flex w-[22px] flex-col items-end gap-[3px]">
@@ -131,8 +131,8 @@ function Sidebar() {
             href={href}
             aria-current={isActive(href) ? "page" : undefined}
             className={cn(
-              "flex h-11 items-center gap-3 rounded-md px-3 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-muted",
-              "aria-[current=page]:bg-primary-soft aria-[current=page]:font-semibold aria-[current=page]:text-primary-text",
+              "flex h-11 items-center gap-3 rounded-full px-3.5 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-muted",
+              "aria-[current=page]:bg-primary-soft aria-[current=page]:font-semibold aria-[current=page]:text-primary-text outline-none focus-visible:ring-2 focus-visible:ring-primary",
             )}
           >
             <Icon className="size-5" />

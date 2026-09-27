@@ -44,7 +44,7 @@ export default function UsersPage() {
   return (
     <>
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Сотрудники {data && <span className="text-muted-foreground">({data.total})</span>}</h1>
+        <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.02em]">Сотрудники {data && <span className="text-muted-foreground">({data.total})</span>}</h1>
         <Button onClick={() => setEditing("new")}>
           <PlusIcon /> Добавить
         </Button>
@@ -173,7 +173,7 @@ function UserDialog({ user, onClose }: { user: User | "new" | null; onClose: () 
                 id="role"
                 name="role"
                 defaultValue={current?.role ?? "USER"}
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="glass-inner h-[50px] rounded-md border border-input px-4 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 {ROLES.map((role) => (
                   <option key={role} value={role}>

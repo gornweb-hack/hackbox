@@ -38,7 +38,7 @@ export function ReputationCard({ className }: { className?: string }) {
         <div className="flex flex-col items-start gap-3.5 pt-1.5 pb-1">
           <div className="flex gap-2 text-muted-foreground">
             {[SmileIcon, ShieldIcon].map((Icon, index) => (
-              <span key={index} className="flex size-10 items-center justify-center rounded-lg border border-dashed border-border-strong">
+              <span key={index} className="flex size-10 items-center justify-center rounded-md border border-dashed border-border-strong">
                 <Icon className="size-5" />
               </span>
             ))}

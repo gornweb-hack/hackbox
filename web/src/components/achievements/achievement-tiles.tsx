@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 // Полученная: награда в синем круге, над названием — подпись (например, «Последняя» или дата)
 export function EarnedTile({ label, title, description }: { label: ReactNode; title: string; description: string }) {
   return (
-    <div className="flex gap-3 rounded-lg bg-muted p-3.5">
+    <div className="glass-inner flex gap-3 rounded-[20px] p-3.5">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary-soft-border bg-primary-soft text-primary-text">
         <AwardIcon className="size-5" />
       </span>
@@ -35,7 +35,7 @@ export function LockedTile({
   text: string | null;
 }) {
   return (
-    <div className="flex gap-3 rounded-lg border border-dashed border-border-strong p-3.5">
+    <div className="flex gap-3 rounded-[20px] border border-dashed border-border-strong p-3.5">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-muted-foreground">
         <LockIcon className="size-5" />
       </span>

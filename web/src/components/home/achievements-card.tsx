@@ -39,7 +39,7 @@ function AchievementsBody({ achievements }: { achievements: AchievementsSummary 
               <>
                 Последняя
                 {latest.isNew && (
-                  <span className="flex h-[18px] items-center rounded-[5px] bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                  <span className="flex h-[18px] items-center rounded-full bg-primary px-2 text-[11px] font-semibold text-primary-foreground">
                     Новая
                   </span>
                 )}

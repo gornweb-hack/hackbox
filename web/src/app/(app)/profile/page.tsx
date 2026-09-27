@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronRightIcon, TargetIcon } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
 import { EarnedTile, LockedTile } from "@/components/achievements/achievement-tiles";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { anyTested, trainingOf, useSkills } from "@/lib/analytics";
 import { formatXp, useProgress, useShelf } from "@/lib/gamification";
@@ -45,7 +46,7 @@ export default function ProfilePage() {
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     // scroll-mt — чтобы при переходе по якорю заголовок не прилипал к краю экрана
-    <section id={id} className="flex scroll-mt-6 flex-col gap-4 rounded-xl border bg-card p-5 shadow-card">
+    <section id={id} className="glass relative flex scroll-mt-6 flex-col gap-4 rounded-xl p-5">
       <h2 className="text-base font-semibold tracking-[-0.01em]">{title}</h2>
       {children}
     </section>
@@ -95,7 +96,7 @@ function SkillsList() {
                 <span className={cn("flex items-center gap-2 text-[15px]", weak && "font-semibold")}>
                   {skill.title}
                   {weak && (
-                    <span className="rounded-md border border-primary-soft-border bg-primary-soft px-1.5 text-xs font-semibold text-primary-text">
+                    <span className="rounded-full border border-primary-soft-border bg-primary-soft px-2 text-xs font-semibold text-primary-text">
                       самый слабый
                     </span>
                   )}
@@ -115,7 +116,7 @@ function SkillsList() {
       {training && (
         <Link
           href={`/scenarios/${training.scenarioId}`}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border border-primary-soft-border bg-primary-soft px-4 text-[15px] font-semibold text-primary-text transition-colors outline-none hover:border-primary focus-visible:ring-2 focus-visible:ring-primary sm:self-start"
+          className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "h-auto min-h-[50px] py-3 text-center whitespace-normal sm:self-start")}
         >
           <TargetIcon className="size-[18px]" />
           Потренировать: {training.skill.title.toLowerCase()}
@@ -188,7 +189,7 @@ function History() {
           >
             <Link
               href={`/scenarios/runs/${run.id}`}
-              className="flex min-h-14 items-center gap-3 rounded-md px-2 py-2 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+              className="flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
             >
               <span aria-hidden className={cn("size-2.5 shrink-0 rounded-full", OUTCOME_DOTS[run.outcome])} />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -213,7 +214,7 @@ function History() {
           aria-expanded={expanded}
           aria-controls="history-list"
           onClick={() => setExpanded(!expanded)}
-          className="flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-[15px] font-medium transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:self-start"
+          className={cn(buttonVariants({ variant: "ghost" }), "glass-inner border-border sm:self-start")}
         >
           {expanded ? "Свернуть" : `Смотреть больше · ${hidden}`}
           <ChevronDownIcon className={cn("size-4 transition-transform", expanded && "rotate-180")} />

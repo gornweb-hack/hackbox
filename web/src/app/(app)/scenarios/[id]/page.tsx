@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useStartRun } from "@/lib/runs";
 import { SCALE_TITLES } from "@/lib/scales";
 import { useScenarios } from "@/lib/scenarios";
-import { cn } from "@/lib/utils";
 
 // Вступление к сценарию: о чём он, как устроена механика, и старт прохождения
 export default function ScenarioPage() {
@@ -28,7 +27,7 @@ export default function ScenarioPage() {
         <p className="text-sm text-muted-foreground">
           {isError ? "Каталог сценариев недоступен. Обновите страницу чуть позже." : "Сценарий не найден."}
         </p>
-        <Link href="/scenarios" className={cn(buttonVariants({ variant: "outline" }), "h-11 px-5 text-[15px]")}>
+        <Link href="/scenarios" className={buttonVariants({ variant: "outline" })}>
           Все сценарии
         </Link>
       </div>
@@ -43,7 +42,7 @@ export default function ScenarioPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <section className="flex flex-col gap-4 rounded-xl bg-hero px-5 pt-[22px] pb-5">
+      <section className="glass-dark relative flex flex-col gap-4 rounded-2xl px-[22px] pt-6 pb-[22px]">
         <span className="text-[13px] font-medium text-[#93b2ff]">{scenario.category.title}</span>
         <div className="flex flex-col gap-2">
           <h1 className="text-[26px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-white lg:text-[34px]">
@@ -57,7 +56,7 @@ export default function ScenarioPage() {
       {/* Пока человек читает, как устроен сценарий, проводник катит тележку по вагону */}
       <CarScene scenarioId={scenario.id} walkMs={9000} />
 
-      <section className="flex flex-col gap-2 rounded-xl border bg-card p-5 text-[15px] leading-[1.5] shadow-card">
+      <section className="glass relative flex flex-col gap-2 rounded-xl p-5 text-[15px] leading-[1.5]">
         <h2 className="text-base font-semibold tracking-[-0.01em]">Как это устроено</h2>
         <p>
           Каждое решение по-разному двигает две шкалы — «{SCALE_TITLES.loyalty}» и «{SCALE_TITLES.safety}». Исход
@@ -75,7 +74,8 @@ export default function ScenarioPage() {
       <Button
         onClick={begin}
         disabled={start.isPending}
-        className="h-[52px] gap-2.5 px-[26px] text-base font-semibold hover:bg-primary-hover sm:self-start sm:min-w-[200px]"
+        size="xl"
+        className="sm:min-w-[200px] sm:self-start"
       >
         <PlayIcon className="size-[18px] fill-current" />
         Начать прохождение

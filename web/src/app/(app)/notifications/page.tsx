@@ -35,7 +35,7 @@ export default function NotificationsPage() {
           type="button"
           onClick={close}
           aria-label="Закрыть уведомления"
-          className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted"
+          className="glass glass-press relative flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
           <XIcon className="size-5" />
         </button>
@@ -64,7 +64,7 @@ function Inbox({ list }: { list: NotificationList }) {
 
   if (list.items.length === 0) {
     return (
-      <section className="flex flex-col items-center gap-2 rounded-xl border bg-card px-5 py-10 text-center shadow-card">
+      <section className="flex flex-col items-center gap-2 rounded-[20px] border border-dashed border-border-strong px-5 py-10 text-center">
         <BellIcon className="size-8 text-muted-foreground" />
         <p className="text-[15px] font-medium">Пока уведомлений нет</p>
         <p className="text-sm text-muted-foreground">Здесь появятся новые уровни, ачивки и новости тренажёра.</p>
@@ -73,11 +73,14 @@ function Inbox({ list }: { list: NotificationList }) {
   }
 
   return (
-    <ol className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-card">
+    <ol className="glass relative flex flex-col gap-1 rounded-xl p-2">
       {list.items.map((item) => {
         const unread = item.readAt === null || fresh.has(item.id);
         return (
-          <li key={item.id} className={cn("flex gap-3 border-b px-5 py-4 last:border-b-0", unread && "bg-primary-soft/60")}>
+          <li
+            key={item.id}
+            className={cn("flex gap-3 rounded-lg border border-transparent px-4 py-3.5", unread && "border-primary-soft-border bg-primary-soft")}
+          >
             <span className={cn("mt-2 size-2 shrink-0 rounded-full", DOTS[item.level])} />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <div className="flex items-baseline justify-between gap-3">

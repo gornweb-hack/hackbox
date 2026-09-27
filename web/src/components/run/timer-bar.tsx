@@ -51,7 +51,7 @@ export function TimerBar({
   const secondsLeft = Math.ceil(left / 1000);
   const urgent = left <= seconds * 1000 * URGENT_SHARE;
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-card">
+    <div className="glass relative flex items-center gap-3 rounded-full py-3 pr-5 pl-4">
       <TimerIcon className={cn("size-6 shrink-0", urgent ? "text-destructive" : "text-primary-text")} />
       <div
         role="progressbar"

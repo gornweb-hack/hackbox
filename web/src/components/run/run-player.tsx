@@ -58,19 +58,19 @@ export function RunPlayer({ run }: { run: RunView }) {
         />
       )}
 
-      <section className="grid gap-5 rounded-xl border bg-card p-5 shadow-card sm:grid-cols-2 sm:gap-8">
+      <section className="glass relative grid gap-5 rounded-xl p-5 sm:grid-cols-2 sm:gap-8">
         <ScaleMeter scale="loyalty" value={run.loyalty} delta={run.last?.loyaltyDelta} />
         <ScaleMeter scale="safety" value={run.safety} delta={run.last?.safetyDelta} />
       </section>
 
       {run.last?.timedOut && (
-        <p className="flex items-center gap-2.5 rounded-lg border bg-card px-3.5 py-3 text-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
+        <p className="glass-inner flex items-center gap-2.5 rounded-[20px] px-4 py-3 text-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
           <TimerOffIcon className="size-[18px] shrink-0 text-primary-text" />
           Время вышло — ситуация развивалась без вас
         </p>
       )}
 
-      <section className="rounded-xl bg-hero px-5 py-[22px]">
+      <section className="glass-dark relative rounded-2xl px-[22px] py-6">
         <TypedText key={node.id} text={node.text} instant={instant} onDone={onTyped} />
       </section>
 

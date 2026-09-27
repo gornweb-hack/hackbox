@@ -140,7 +140,7 @@ function Station({ level, reached, current, arrived, last }: { level: Level; rea
       <span
         data-station
         className={cn(
-          "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border-[5px] bg-card text-[11px] font-bold tabular-nums",
+          "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border-[5px] bg-white text-[11px] font-semibold tabular-nums",
           reached ? "border-foreground text-foreground" : "border-border-strong text-muted-foreground",
         )}
       >
@@ -156,7 +156,7 @@ function Station({ level, reached, current, arrived, last }: { level: Level; rea
       <div className="flex min-w-0 flex-col">
         <span className={cn("text-[15px] leading-tight font-semibold", !reached && "text-muted-foreground")}>
           {level.title}
-          {current && <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 align-middle text-[11px] font-semibold text-foreground">ваш уровень</span>}
+          {current && <span className="glass-inner ml-2 rounded-full px-2 py-0.5 align-middle text-[11px] font-semibold text-foreground">ваш уровень</span>}
         </span>
         <span className="text-[13px] text-muted-foreground">
           {level.speed} км/ч · {level.xp === 0 ? "старт маршрута" : `от ${formatXp(level.xp)} опыта`}
@@ -173,15 +173,15 @@ function StopDot({ className }: { className: string }) {
 }
 
 const CARD =
-  "relative flex flex-col gap-2 rounded-xl border bg-card p-4 shadow-card transition-[border-color,box-shadow] outline-none hover:border-border-strong hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[.995]";
+  "glass glass-press relative flex flex-col gap-2 rounded-xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
 // Остановка — сценарий. Пройденная — «пробитый билет» со штампом лучшего результата,
 // следующая — выделена и сразу предлагает начать
 function Stop({ scenario, isNext, best }: { scenario: Scenario; isNext: boolean; best?: RunSummary }) {
   return (
     <div className="relative">
-      <StopDot className={best ? "border-foreground bg-foreground" : isNext ? "border-foreground bg-card" : "border-border-strong bg-card"} />
-      <Link href={`/scenarios/${scenario.id}`} className={cn(CARD, isNext && "border-foreground/40")}>
+      <StopDot className={best ? "border-foreground bg-foreground" : isNext ? "border-foreground bg-white" : "border-border-strong bg-white"} />
+      <Link href={`/scenarios/${scenario.id}`} className={cn(CARD, isNext && "ring-2 ring-primary-soft-border")}>
         {best && <TicketNotches />}
         <div className={cn("flex flex-col gap-0.5", best && "pr-28")}>
           <span className="text-[12px] font-medium text-muted-foreground">{scenario.category.title}</span>
@@ -192,13 +192,13 @@ function Stop({ scenario, isNext, best }: { scenario: Scenario; isNext: boolean;
           // Единственная синяя кнопка на маршруте: синий здесь — только действие и пройденный путь
           <span className="flex items-center justify-between gap-3">
             <span className="text-[13px] font-medium text-muted-foreground">Следующая остановка</span>
-            <span className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[13px] font-semibold text-primary-foreground">
+            <span className="flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-(--primary-shadow)">
               <PlayIcon className="size-3.5 fill-current" />
               Начать
             </span>
           </span>
         )}
-        {!best && !isNext && scenario.isNew && <span className="w-fit rounded-sm bg-foreground px-1.5 text-[11px] font-semibold text-background">Новый</span>}
+        {!best && !isNext && scenario.isNew && <span className="w-fit rounded-full bg-foreground px-2 text-[11px] font-semibold text-background">Новый</span>}
         <ScenarioTags scenario={scenario} tone="light" withCategory={false} />
       </Link>
     </div>
@@ -234,7 +234,7 @@ function Stamp({ run }: { run: RunSummary }) {
       )}
       aria-label={`Лучший результат: ${stamp.label}, лояльность ${run.loyalty}, безопасность ${run.safety}, ${date}`}
     >
-      <span className="text-[11px] font-bold tracking-wide">{stamp.label}</span>
+      <span className="text-[11px] font-semibold tracking-wide">{stamp.label}</span>
       <span>
         Л {run.loyalty} · Б {run.safety}
       </span>
@@ -247,8 +247,8 @@ function Stamp({ run }: { run: RunSummary }) {
 function Announcement({ item, speed }: { item: Upcoming; speed: number }) {
   return (
     <div className="relative">
-      <StopDot className="border-dashed border-border-strong bg-card" />
-      <div className="flex flex-col gap-1.5 rounded-xl border border-dashed bg-card/60 p-4 opacity-70">
+      <StopDot className="border-dashed border-border-strong bg-white" />
+      <div className="flex flex-col gap-1.5 rounded-[20px] border border-dashed border-border-strong p-4 opacity-80">
         <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
           <LockIcon className="size-3.5" />
           {item.category}

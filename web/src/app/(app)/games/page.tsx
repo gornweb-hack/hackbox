@@ -14,10 +14,10 @@ export default function GamesPage() {
       </div>
       <Link
         href="/games/unattended-item"
-        className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-card transition-[border-color,box-shadow] outline-none hover:border-border-strong hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        className="glass glass-press relative flex items-center gap-4 rounded-xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-hero text-amber">
-          <SearchIcon className="size-6" />
+        <span className="glass-inner flex size-11 shrink-0 items-center justify-center rounded-md shadow-[inset_0_1px_0_#fff,0_0_0_1px_rgb(255_255_255/.6)]">
+          <SearchIcon className="size-5" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[12px] font-medium text-muted-foreground">Безопасность · памятка, №14, №20, №41</span>
@@ -30,10 +30,10 @@ export default function GamesPage() {
       </Link>
       <Link
         href="/games/boarding"
-        className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-card transition-[border-color,box-shadow] outline-none hover:border-border-strong hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        className="glass glass-press relative flex items-center gap-4 rounded-xl p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-hero text-amber">
-          <TicketCheckIcon className="size-6" />
+        <span className="glass-inner flex size-11 shrink-0 items-center justify-center rounded-md shadow-[inset_0_1px_0_#fff,0_0_0_1px_rgb(255_255_255/.6)]">
+          <TicketCheckIcon className="size-5" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[12px] font-medium text-muted-foreground">Правила посадки · памятка, №1–6, №32, №39</span>

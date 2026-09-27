@@ -25,7 +25,7 @@ export function ScaleMeter({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <span className="glass-inner flex size-10 shrink-0 items-center justify-center rounded-md">
           <Icon className="size-5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -60,8 +60,8 @@ export function ScaleMeter({
             className={cn("absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 motion-reduce:transition-none", TONES[zone.tone])}
             style={{ width: `${value}%` }}
           />
-          <div className="absolute inset-y-0 left-[30%] w-0.5 bg-card" />
-          <div className="absolute inset-y-0 left-[60%] w-0.5 bg-card" />
+          <div className="absolute inset-y-0 left-[30%] w-0.5 bg-white" />
+          <div className="absolute inset-y-0 left-[60%] w-0.5 bg-white" />
         </div>
         <div aria-hidden className="relative h-3.5 text-[11px] text-muted-foreground">
           <span className="absolute left-0">0</span>

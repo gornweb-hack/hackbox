@@ -66,8 +66,9 @@ export function ProfileHeader({ me }: { me: Me }) {
   );
 }
 
+// Круглая стеклянная кнопка 44×44
 const BELL =
-  "relative flex size-11 shrink-0 items-center justify-center rounded-lg border bg-card transition-colors outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:bg-muted";
+  "relative flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
 // Колокольчик открывает уведомления, а когда они открыты — подсвечен и закрывает их
 function NotificationsBell({ unread }: { unread: number }) {
@@ -81,7 +82,7 @@ function NotificationsBell({ unread }: { unread: number }) {
         onClick={close}
         aria-label="Закрыть уведомления"
         aria-pressed
-        className={cn(BELL, "border-primary-soft-border bg-primary-soft text-primary-text hover:border-primary")}
+        className={cn(BELL, "border border-primary-soft-border bg-primary-soft text-primary-text transition-colors hover:border-primary")}
       >
         <BellIcon className="size-5" />
       </button>
@@ -91,11 +92,11 @@ function NotificationsBell({ unread }: { unread: number }) {
     <Link
       href="/notifications"
       aria-label={unread > 0 ? `Уведомления: непрочитанных ${unread}` : "Уведомления"}
-      className={BELL}
+      className={cn(BELL, "glass glass-press")}
     >
       <BellIcon className="size-5" />
       {unread > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-zone-red px-1 text-[11px] font-semibold text-white">
+        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white shadow-[0_0_0_2px_var(--background)]">
           {unread > 9 ? "9+" : unread}
         </span>
       )}

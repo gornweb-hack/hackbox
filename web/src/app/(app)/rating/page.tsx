@@ -26,7 +26,7 @@ export default function RatingPage() {
       ) : isError ? (
         <p className="text-sm text-muted-foreground">Рейтинг недоступен. Обновите страницу чуть позже.</p>
       ) : (
-        <section className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-card">
+        <section className="glass relative flex flex-col gap-4 rounded-xl p-5">
           <h2 className="text-base font-semibold tracking-[-0.01em]">{rating.title ?? "Бригада не назначена"}</h2>
           {rating.me ? <RatingSummary rating={rating} me={rating.me} /> : <NotInRating rating={rating} />}
           {rating.items.length > 0 && (

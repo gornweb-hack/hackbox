@@ -18,17 +18,17 @@ function monthTitle(month: string) {
   return name[0].toUpperCase() + name.slice(1);
 }
 
-// Переключатель среза: бригада, депо, компания
+// Переключатель среза: бригада, депо, компания. Сегментный переключатель системы — активный сегмент белая «линза»
 export function ScopeSwitch({ value, onChange }: { value: RatingScope; onChange: (scope: RatingScope) => void }) {
   return (
-    <div role="group" aria-label="Срез рейтинга" className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+    <div role="group" aria-label="Срез рейтинга" className="grid grid-cols-3 gap-1 rounded-full bg-seg-track p-1 shadow-[inset_0_1px_2px_rgb(15_28_60/.08)]">
       {RATING_SCOPES.map((scope) => (
         <button
           key={scope.value}
           type="button"
           aria-pressed={value === scope.value}
           onClick={() => onChange(scope.value)}
-          className="h-11 rounded-[9px] text-sm font-medium text-muted-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-[0_1px_2px_rgb(16_18_22/0.08),0_0_0_1px_var(--border)]"
+          className="h-10 rounded-full text-sm font-medium text-muted-foreground transition-[background-color,color,box-shadow] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-[inset_0_1px_0_#fff,0_0_0_.5px_rgb(15_28_60/.08),0_4px_12px_-4px_rgb(20_40_110/.28)]"
         >
           {scope.label}
         </button>
@@ -56,7 +56,7 @@ export function RatingSummary({ rating, me }: { rating: Rating; me: NonNullable<
                 `до ${gap.place}-го — ещё одно прохождение`}
         </span>
       </div>
-      <span className="flex h-7 shrink-0 items-center rounded-full border px-3 text-[13px] text-muted-foreground">
+      <span className="glass-inner flex h-7 shrink-0 items-center rounded-full border px-3 text-[13px] font-medium text-muted-foreground">
         {monthTitle(rating.month)}
       </span>
     </div>
@@ -74,13 +74,13 @@ export function RatingRowItem({ row }: { row: RatingRow }) {
     >
       <span className="w-[18px] shrink-0 text-[15px] font-semibold text-muted-foreground">{row.place}</span>
       <Avatar>
-        <AvatarFallback className={cn("bg-muted text-xs font-semibold", row.isMe && "bg-primary text-primary-foreground")}>
+        <AvatarFallback className={cn("glass-inner text-xs font-semibold", row.isMe && "bg-primary text-primary-foreground shadow-none")}>
           {initials(row.name)}
         </AvatarFallback>
       </Avatar>
       <span className={cn("min-w-0 flex-1 truncate text-[15px] font-medium", row.isMe && "font-semibold")}>{row.name}</span>
       {row.isMe && (
-        <span className="flex h-5 shrink-0 items-center rounded-md border border-primary-soft-border bg-card px-[7px] text-xs font-semibold text-primary-text">
+        <span className="flex h-5 shrink-0 items-center rounded-full border border-primary-soft-border bg-white/70 px-2 text-xs font-semibold text-primary-text">
           вы
         </span>
       )}
@@ -93,7 +93,7 @@ export function RatingRowItem({ row }: { row: RatingRow }) {
 export function NotInRating({ rating }: { rating: Rating }) {
   return (
     <div className="flex flex-col items-start gap-3.5 pt-1.5 pb-1">
-      <span className="flex size-10 items-center justify-center rounded-lg border border-dashed border-border-strong text-muted-foreground">
+      <span className="flex size-10 items-center justify-center rounded-md border border-dashed border-border-strong text-muted-foreground">
         <TrophyIcon className="size-5" />
       </span>
       <div className="flex flex-col gap-[3px]">

@@ -74,9 +74,9 @@ export function NovelPlayer({ run }: { run: RunView }) {
       </div>
 
       {/* Окно реплики наезжает на сцену снизу, как в визуальных новеллах */}
-      <section className="relative z-10 mx-2 -mt-12 rounded-2xl bg-hero px-5 pt-6 pb-5 shadow-card sm:mx-6 sm:-mt-14">
+      <section className="glass-dark relative z-10 mx-2 -mt-12 rounded-2xl px-5 pt-6 pb-5 sm:mx-6 sm:-mt-14">
         {focus && (
-          <span className="absolute -top-3.5 left-4 rounded-md px-3 py-1 text-[13px] font-semibold text-white" style={{ background: focus.plate }}>
+          <span className="absolute -top-3.5 left-4 z-1 rounded-full px-3 py-1 text-[13px] font-semibold text-white" style={{ background: focus.plate }}>
             {focus.name}
             <span className="ml-1.5 font-normal opacity-80">{focus.role}</span>
           </span>
@@ -123,7 +123,7 @@ function Sprite({ side, role, reaction, active, nodeId }: { side: "left" | "righ
 // Шкала на сцене: цвет зоны, значение и изменение после прошлого решения
 function ScaleChip({ label, value, delta }: { label: string; value: number; delta?: number }) {
   return (
-    <span className="flex w-fit items-center gap-1.5 rounded-full bg-hero/85 px-2.5 py-1 text-[12px] text-white backdrop-blur sm:text-[13px]">
+    <span className="flex w-fit items-center gap-1.5 rounded-full bg-toast px-2.5 py-1 text-[12px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/.2)] backdrop-blur-md sm:text-[13px]">
       <span className={cn("size-2 rounded-full", ZONE_DOTS[zoneOf(value).tone])} />
       {label}
       <span className="font-semibold">{value}</span>

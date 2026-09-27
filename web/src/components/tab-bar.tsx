@@ -3,8 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
-import { GLASS_RIM } from "@/lib/glass";
+import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -58,14 +57,6 @@ interface View {
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-const GLASS: CSSProperties = {
-  background: "rgba(255,255,255,.42)",
-  backdropFilter: "blur(22px) saturate(190%)",
-  WebkitBackdropFilter: "blur(22px) saturate(190%)",
-  boxShadow:
-    "inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 1px rgba(255,255,255,.4), 0 1px 1px rgba(20,30,60,.05), 0 16px 36px -14px rgba(20,40,110,.38)",
-};
 
 // Мобильная навигация: стеклянная капсула, активный пункт — синяя капля.
 // При переходе капля сжимается в круг, подпрыгивает и опускается на новый пункт
@@ -256,10 +247,8 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          style={GLASS}
-          className="relative h-16 cursor-pointer touch-none rounded-full border border-white/65 select-none"
+          className="glass relative h-16 cursor-pointer touch-none rounded-full select-none"
         >
-          <span aria-hidden style={GLASS_RIM} className="pointer-events-none absolute inset-0 rounded-[inherit]" />
 
           <div
             aria-hidden
@@ -271,8 +260,9 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
               height: dropH,
               transform: `translateX(-50%) scale(${1 + 0.08 * press})`,
               opacity: shown ? 1 : 0,
-              background: "linear-gradient(180deg, #4A7DFF, #1F5BFF)",
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 6px rgba(8,20,90,.25), 0 ${6 + 10 * lift}px ${16 + 12 * lift}px -6px rgba(31,91,255,.75)`,
+              // Синий — только ровной заливкой; тень графитовая, как у главной кнопки, без цветного свечения
+              background: "var(--primary)",
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 6px rgba(8,20,90,.25), 0 ${6 + 10 * lift}px ${16 + 12 * lift}px -8px rgba(18,20,24,.5)`,
             }}
           />
 

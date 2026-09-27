@@ -21,19 +21,25 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* Тосты тёмные, как в макете: переменные темы Sonner берут токен toast, радиус 14.
-          Цвет описания у Sonner задан своим селектором, поэтому перебиваем его с important */}
+      {/* Тосты — тёмное стекло, как в макете: переменные темы Sonner берут токен toast, радиус 26, размытие и блик кромки.
+          Цвет описания и тень у Sonner заданы своими селекторами, поэтому перебиваем их с important */}
       <Toaster
         position="top-center"
         style={
           {
             "--normal-bg": "var(--toast)",
-            "--normal-border": "var(--toast)",
+            "--normal-border": "rgb(255 255 255 / 0.08)",
             "--normal-text": "#fff",
-            "--border-radius": "14px",
+            "--border-radius": "26px",
           } as CSSProperties
         }
-        toastOptions={{ classNames: { description: "text-[#c3c9d3]!" } }}
+        toastOptions={{
+          classNames: {
+            toast:
+              "backdrop-blur-[26px] backdrop-saturate-185 shadow-[0_18px_40px_-14px_rgb(10_20_60/.55),inset_0_1px_0_rgb(255_255_255/.2)]!",
+            description: "text-[#c3c9d3]!",
+          },
+        }}
       />
     </QueryClientProvider>
   );

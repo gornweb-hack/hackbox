@@ -13,7 +13,7 @@ export function ChoiceList({ node, pending, onChoose }: { node: Node; pending: b
           disabled={pending}
           onClick={() => onChoose(choice.id)}
           style={{ animationDelay: `${index * 90}ms` }}
-          className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 fill-mode-both min-h-11 rounded-lg border bg-card px-4 py-3 text-left text-[15px] leading-snug shadow-card transition-colors outline-none hover:border-primary-soft-border hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[.995] disabled:opacity-60"
+          className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 fill-mode-both glass glass-press relative min-h-[50px] rounded-lg px-5 py-3.5 text-left text-[15px] leading-snug outline-none hover:text-primary-text focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {choice.text}
         </button>

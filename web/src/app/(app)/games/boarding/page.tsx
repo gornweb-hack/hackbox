@@ -42,23 +42,23 @@ export default function BoardingPage() {
 
 function BoardingSummary({ result, onAgain }: { result: Result; onAgain: () => void }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-card motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
-      <div className="flex flex-col gap-2 rounded-lg bg-hero px-4 py-4 text-white">
-        <span className="text-[13px] font-medium text-[#93b2ff]">Итоги смены</span>
+    <section className="glass relative flex flex-col gap-4 rounded-xl p-5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-base font-semibold tracking-[-0.01em]">Итоги смены</h2>
         <div className="flex items-center gap-1" aria-label={`${result.stars} из 3 звёзд`}>
           {[1, 2, 3].map((star) => (
-            <StarIcon key={star} className={cn("size-7", star <= result.stars ? "fill-amber text-amber" : "text-white/25")} />
+            <StarIcon key={star} className={cn("size-7", star <= result.stars ? "fill-zone-yellow text-zone-yellow" : "text-border-strong")} />
           ))}
         </div>
         <p className="text-[15px] leading-snug">
-          Верных решений: <span className="font-semibold text-amber">{result.correct}</span> из {result.total} · очки: {result.points}
+          Верных решений: <span className="font-semibold">{result.correct}</span> из {result.total} · очки: {result.points}
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
-        <span className="rounded-md border px-2.5 py-1">Безопасность {formatDelta(result.safety)}</span>
-        <span className="rounded-md border px-2.5 py-1">Лояльность {formatDelta(result.loyalty)}</span>
-        {result.missed > 0 && <span className="rounded-md border px-2.5 py-1">Не успели посадить: {result.missed}</span>}
+        <span className="glass-inner rounded-full border px-3 py-1">Безопасность {formatDelta(result.safety)}</span>
+        <span className="glass-inner rounded-full border px-3 py-1">Лояльность {formatDelta(result.loyalty)}</span>
+        {result.missed > 0 && <span className="glass-inner rounded-full border px-3 py-1">Не успели посадить: {result.missed}</span>}
       </div>
 
       {(result.mistakes.length > 0 || result.lateOpened) && (
@@ -95,11 +95,11 @@ function BoardingSummary({ result, onAgain }: { result: Result; onAgain: () => v
 
       <p className="text-[13px] text-muted-foreground">Тренировка: результат мини-игры не меняет опыт и шкалы профиля.</p>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button onClick={onAgain} className="h-11 gap-2 px-5 text-[15px]">
+        <Button onClick={onAgain} size="lg">
           <RotateCcwIcon className="size-4" />
           Сыграть ещё раз
         </Button>
-        <Link href="/scenarios" className={cn(buttonVariants({ variant: "outline" }), "h-11 px-5 text-[15px]")}>
+        <Link href="/scenarios" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "glass-inner border-border")}>
           К сценариям
         </Link>
       </div>
@@ -109,7 +109,7 @@ function BoardingSummary({ result, onAgain }: { result: Result; onAgain: () => v
 
 function Mistake(props: { situation: string; chosen: string; correct: string; weak: boolean; phrase: string | null; rule: string }) {
   return (
-    <li className="flex flex-col gap-2 rounded-lg border p-4">
+    <li className="glass-inner flex flex-col gap-2 rounded-[20px] p-4">
       <span className="text-[13px] text-muted-foreground">
         {props.situation}
         {props.weak && " · слабый ответ"}
@@ -120,7 +120,7 @@ function Mistake(props: { situation: string; chosen: string; correct: string; we
         <span className="font-medium">{props.correct}</span>
       </p>
       {props.phrase && <p className="text-[15px] leading-snug">{props.phrase}</p>}
-      <p className="rounded-lg border border-primary-soft-border bg-primary-soft px-3.5 py-3 text-sm leading-[1.45]">{props.rule}</p>
+      <p className="rounded-lg border border-primary-soft-border bg-primary-soft px-4 py-3 text-sm leading-[1.45]">{props.rule}</p>
     </li>
   );
 }
