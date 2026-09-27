@@ -13,6 +13,7 @@ flowchart LR
     scenarios["scenarios<br/>каталог и движок сценариев"]
     gamification["gamification<br/>опыт, уровни, ачивки, рейтинг"]
     analytics["analytics<br/>навыки и рекомендация"]
+    notifications["notifications<br/>центр уведомлений, прочитано"]
     events["events<br/>Redis → SSE"]
   end
   content[("content/*.yaml<br/>сценарии и правила")]
@@ -27,12 +28,17 @@ flowchart LR
   auth --> postgres
   scenarios --> postgres
   gamification --> postgres
+  notifications --> postgres
+  auth -->|"user.created, user.updated"| redis
   scenarios -->|"scenario.completed"| redis
-  gamification -->|"progress.updated, уведомления"| redis
+  gamification -->|"progress.updated, notification.requested"| redis
+  notifications -->|"notifications.updated"| redis
   redis -->|"группа core"| gamification
+  redis -->|"группа core"| notifications
   redis --> events
   analytics -.->|"сервисы модуля"| scenarios
   gamification -.->|"штат для рейтинга"| auth
+  notifications -.->|"получатели broadcast"| auth
 ```
 
 - **Браузер ходит только на `web`.** Next проксирует `/api/*` в ядро, поэтому cookie и SSE работают с одного адреса.
@@ -47,11 +53,12 @@ flowchart LR
 | `scenarios` | каталог, прохождение: узлы, варианты, две шкалы, таймер на сервере, разбор; демо-история | `scenario_runs`, `scenario_decisions` | `content/scenarios/*.yaml`, движок `engine.ts` |
 | `gamification` | опыт, уровни, репутация, ачивки, награда за прохождение, рейтинг за месяц | `gamification_runs` — журнал из событий | `content/gamification.yaml`, `rating.ts`, `achievements.ts` |
 | `analytics` | навыки ролевой модели, слабый навык, какой сценарий потренировать | своей таблицы нет | `content/skills.yaml`, метки `skills` у вариантов, `skills.ts` |
+| `notifications` | центр уведомлений: строка каждому получателю из `notification.requested`, список и счётчик непрочитанных, «прочитано» | `notifications_items` | `notification.ts` — получатели и содержимое |
 | `events` | публикация в стрим `events`, чтение группой `core` с повторами и DLQ, доставка в браузер по SSE | Redis | [docs/events.md](events.md) |
 
 **Модули не лезут в чужие таблицы** и не связываются через JOIN ([docs/database.md](database.md)). Чужие данные берутся двумя способами:
 - **копией из события** — геймификация ведёт свой журнал из `scenario.completed`;
-- **через экспортированный сервис** — аналитика читает решения через `RunsService`, рейтинг берёт штат через `UsersService`.
+- **через экспортированный сервис** — аналитика читает решения через `RunsService`, рейтинг берёт штат через `UsersService`, уведомления — получателей рассылки на всех.
 
 ## Путь одного прохождения
 
@@ -63,6 +70,7 @@ sequenceDiagram
   participant db as Postgres
   participant redis as Redis (events)
   participant gm as gamification
+  participant nt as notifications
   participant sse as events (SSE)
 
   user->>web: «Начать»
@@ -79,10 +87,17 @@ sequenceDiagram
   sc->>redis: scenario.completed (исход, шкалы, решения)
   redis->>gm: группа core
   gm->>db: запись в журнал (повтор отсекается по runId)
-  gm->>redis: progress.updated, «Новый уровень», «Ачивка: …»
+  gm->>redis: progress.updated, notification.requested («Новый уровень», «Ачивка: …»)
   redis->>sse: события с userId проводника
   sse-->>web: тосты — главная перечитывает прогресс, рейтинг и навыки
+  redis->>nt: notification.requested, группа core
+  nt->>db: строка в центр уведомлений (повтор отсекается парой eventId + userId)
+  nt->>redis: notifications.updated
+  redis->>sse: событие с userId проводника
+  sse-->>web: колокольчик перечитывает список и счётчик
 ```
+
+Вход с обновлением токена, путь уведомления и повтор событий с DLQ — в [диаграммах последовательности](sequences.md).
 
 ## Ключевые решения
 
