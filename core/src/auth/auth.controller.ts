@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiAuth } from '../common/swagger.js';
 import type { CookieOptions, Request, Response } from 'express';
@@ -7,7 +7,7 @@ import { config } from '../config.js';
 import { type UserProfile, UsersService } from '../users/users.service.js';
 import { AuthGuard, CurrentUser } from './auth.guard.js';
 import { type Session, AuthService } from './auth.service.js';
-import { LoginDto, RegisterDto } from './dto.js';
+import { LoginDto, RegisterDto, UpdateMeDto } from './dto.js';
 import { ACCESS_COOKIE, type AuthUser, REFRESH_COOKIE } from './tokens.js';
 
 // Обе cookie живут как refresh-токен: истёкший access всё равно дойдёт до ядра,
@@ -81,5 +81,13 @@ export class AuthController {
     const profile = await this.users.profile(user.id);
     if (!profile) throw new ApiError(401, 'UNAUTHORIZED', 'Пользователь больше не существует');
     return profile;
+  }
+
+  @ApiOperation({ summary: 'Сменить свой портрет', description: 'avatar — id портрета из набора или null, чтобы вернуть инициалы. Остальные поля профиля меняет администратор' })
+  @ApiAuth()
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateMeDto): Promise<UserProfile> {
+    return this.users.update(user.id, { avatar: dto.avatar });
   }
 }

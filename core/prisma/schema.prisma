@@ -32,6 +32,8 @@ model User {
   // Бригада и депо — по ним строится рейтинг («Бригада 3», «Депо Москва-ВСМ»)
   crew          String?
   depot         String?
+  // Портрет из готового набора (id внешности персонажа: conductor, doctor…); null — инициалы
+  avatar        String?
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   refreshTokens RefreshToken[]
 

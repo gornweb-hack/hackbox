@@ -1,8 +1,11 @@
 "use client";
 
-import { BellIcon, LogOutIcon, SettingsIcon } from "lucide-react";
+import { BellIcon, LogOutIcon, SettingsIcon, UserRoundPenIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Portrait, portraitOf } from "@/components/portrait";
+import { PortraitPicker } from "@/components/portrait-picker";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -17,7 +20,7 @@ import { useCloseNotifications, useNotifications } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 // Шапка над содержимым: кто вошёл, его уровень и бригада, колокольчик со счётчиком непрочитанных.
-// Выход и администрирование в макете не предусмотрены — они в меню по нажатию на аватар
+// Выход, администрирование и смена портрета в макете не предусмотрены — они в меню по нажатию на аватар
 export function ProfileHeader({ me }: { me: Me }) {
   const logout = useLogout();
   // Титул — название уровня из геймификации
@@ -25,6 +28,8 @@ export function ProfileHeader({ me }: { me: Me }) {
   // «Бригада 3 · Депо Москва-ВСМ»; у сотрудника без бригады строки нет
   const crew = [me.crew, me.depot].filter(Boolean).join(" · ");
   const unread = useNotifications().data?.unread ?? 0;
+  const [picking, setPicking] = useState(false);
+  const portrait = portraitOf(me.avatar);
 
   return (
     <header className="flex items-center gap-3.5 px-1 pt-2 pb-2.5 lg:p-0 lg:pb-1">
@@ -35,10 +40,18 @@ export function ProfileHeader({ me }: { me: Me }) {
         >
           {/* Кольцо: зазор цвета фона, затем тонкая синяя обводка */}
           <Avatar className="size-14 shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--primary)] after:hidden">
-            <AvatarFallback className="bg-[linear-gradient(160deg,#2b3140,#11141a)] text-[18px] font-semibold tracking-[0.02em] text-white">
-              {initials(me.name)}
-            </AvatarFallback>
-            <span aria-hidden className="absolute bottom-[9px] left-1/2 -ml-[11px] h-0.5 w-[22px] rounded-full bg-[#6f95ff]" />
+            {portrait ? (
+              <AvatarFallback>
+                <Portrait id={portrait.id} />
+              </AvatarFallback>
+            ) : (
+              <>
+                <AvatarFallback className="bg-[linear-gradient(160deg,#2b3140,#11141a)] text-[18px] font-semibold tracking-[0.02em] text-white">
+                  {initials(me.name)}
+                </AvatarFallback>
+                <span aria-hidden className="absolute bottom-[9px] left-1/2 -ml-[11px] h-0.5 w-[22px] rounded-full bg-[#6f95ff]" />
+              </>
+            )}
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-auto min-w-52">
@@ -48,6 +61,10 @@ export function ProfileHeader({ me }: { me: Me }) {
               Администрирование
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem className="min-h-11 px-3 text-[15px]" onClick={() => setPicking(true)}>
+            <UserRoundPenIcon />
+            Сменить портрет
+          </DropdownMenuItem>
           <DropdownMenuItem className="min-h-11 px-3 text-[15px]" onClick={() => void logout()}>
             <LogOutIcon />
             Выйти
@@ -62,6 +79,7 @@ export function ProfileHeader({ me }: { me: Me }) {
       </div>
 
       <NotificationsBell unread={unread} />
+      <PortraitPicker open={picking} onOpenChange={setPicking} name={me.name} current={portrait?.id ?? null} />
     </header>
   );
 }

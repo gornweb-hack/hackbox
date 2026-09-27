@@ -2,10 +2,23 @@ import { Collar, shade } from "../scene/figures";
 import { type Emotion, Head, type Look } from "../scene/head";
 
 // Персонаж новеллы по пояс. Голова и ворот — те же компоненты, что у фигурок в сцене вагона,
-// только крупнее: голова рисуется в натуральную величину своей системы координат (лицо 76×110)
-export function Bust({ look, coat, emotion, pale }: { look: Look; coat: string; emotion: Emotion; pale?: boolean }) {
+// только крупнее: голова рисуется в натуральную величину своей системы координат (лицо 76×110).
+// viewBox — кадр: по умолчанию персонаж по пояс, портрет профиля берёт голову и плечи
+export function Bust({
+  look,
+  coat,
+  emotion,
+  pale,
+  viewBox = "20 40 160 222",
+}: {
+  look: Look;
+  coat: string;
+  emotion: Emotion;
+  pale?: boolean;
+  viewBox?: string;
+}) {
   return (
-    <svg viewBox="20 40 160 222" aria-hidden className="block h-auto w-full">
+    <svg viewBox={viewBox} aria-hidden className="block h-auto w-full">
       <path d="M28 262 Q30 214 70 204 L130 204 Q170 214 172 262 Z" fill={coat} />
       <path d="M100 204 L130 204 Q170 214 172 262 L100 262 Z" fill={shade(coat)} />
       <rect x="88" y="176" width="24" height="30" fill={look.skinShade} />

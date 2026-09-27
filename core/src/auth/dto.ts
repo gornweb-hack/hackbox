@@ -1,5 +1,7 @@
 import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Length, Matches, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../generated/prisma/client.js';
+import { type Avatar, AVATARS } from '../users/users.service.js';
 
 const ROLES = Object.values(Role);
 
@@ -80,4 +82,12 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(100)
   depot?: string;
+}
+
+// Сам сотрудник в своём профиле меняет только портрет; null — вернуть инициалы
+export class UpdateMeDto {
+  @ApiProperty({ enum: AVATARS, nullable: true, required: false })
+  @IsOptional()
+  @IsIn(AVATARS)
+  avatar?: Avatar | null;
 }

@@ -84,7 +84,8 @@ npm run dev
 | `POST /api/auth/login` `{login, password}` | все | `{user, accessToken, refreshToken}` и cookie |
 | `POST /api/auth/refresh` | все | новая пара токенов по cookie или `{refreshToken}` |
 | `POST /api/auth/logout` | все | отзывает refresh-токен, стирает cookie |
-| `GET /api/auth/me` | вошедший | профиль |
+| `GET /api/auth/me` | вошедший | профиль, включая `avatar` — id портрета или `null` |
+| `PATCH /api/auth/me` `{avatar}` | вошедший | сменить свой портрет: один из `conductor`, `chief`, `doctor`, `guard`, `elder`, `neighbour`, `man`, `redhead`, `woman` или `null` — инициалы |
 | `POST /api/auth/register` `{login, password, name, email?}` | все, если `REGISTRATION_OPEN=true` | регистрация с ролью `USER` |
 | `GET /api/users?ids=a,b` | вошедший | публичные `{id, name, role}`, например для рейтинга |
 | `POST /api/users`, `PATCH /api/users/:id` | `ADMIN` | завести сотрудника, изменить имя, email, роль или пароль |

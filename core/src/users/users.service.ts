@@ -13,6 +13,7 @@ export interface UserProfile {
   role: Role;
   crew: string | null;
   depot: string | null;
+  avatar: string | null;
   createdAt: Date;
 }
 
@@ -33,7 +34,14 @@ export interface UserChanges {
   password?: string;
   crew?: string;
   depot?: string;
+  // null — вернуть инициалы
+  avatar?: string | null;
 }
+
+// Портреты на выбор — внешности персонажей сценариев (web/src/components/run/scene/head.tsx).
+// Список дублирует фронт: ядро принимает только известные id
+export const AVATARS = ['conductor', 'chief', 'doctor', 'guard', 'elder', 'neighbour', 'man', 'redhead', 'woman'] as const;
+export type Avatar = (typeof AVATARS)[number];
 
 // Проводник для рейтинга и демо-истории
 export type StaffMember = Pick<User, 'id' | 'name' | 'crew' | 'depot'>;
@@ -42,8 +50,8 @@ export type StaffMember = Pick<User, 'id' | 'name' | 'crew' | 'depot'>;
 export const normalize = (value: string): string => value.trim().toLowerCase();
 
 export function toProfile(user: User): UserProfile {
-  const { id, login, name, email, role, crew, depot, createdAt } = user;
-  return { id, login, name, email, role, crew, depot, createdAt };
+  const { id, login, name, email, role, crew, depot, avatar, createdAt } = user;
+  return { id, login, name, email, role, crew, depot, avatar, createdAt };
 }
 
 @Injectable()
@@ -128,6 +136,7 @@ export class UsersService {
         // Пустая строка очищает поле
         crew: changes.crew === undefined ? undefined : changes.crew.trim() || null,
         depot: changes.depot === undefined ? undefined : changes.depot.trim() || null,
+        avatar: changes.avatar,
         passwordHash: changes.password ? await hashPassword(changes.password) : undefined,
       },
     });
