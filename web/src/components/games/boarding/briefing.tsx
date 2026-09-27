@@ -3,14 +3,15 @@ import { LAST_ROUND } from "@/games/boarding/flow";
 import { ACTIONS, CASES, LATE, type Round, ROUNDS } from "@/games/boarding/rules";
 import { ACTION_ORDER } from "./action-pad";
 
-// Правила рейса перед его началом: какие ситуации памятки добавились и какие кнопки открылись
+// Правила рейса перед его началом: какие ситуации памятки добавились и какие кнопки открылись.
+// Шторка по рецепту модалок: игра под ней затемнена и размыта, сама карточка — плотное стекло, как у диалогов
 export function Briefing({ round, onStart }: { round: Round; onStart: () => void }) {
   const rules = [...Object.values(CASES).filter((rule) => rule.round === round), ...(round === LATE.round ? [LATE] : [])];
   const opened = ACTION_ORDER.filter((action) => ACTIONS[action].round === round).map((action) => `«${ACTIONS[action].label}»`);
 
   return (
-    <div className="absolute inset-0 z-10 flex items-start justify-center overflow-y-auto bg-black/55 p-3 motion-safe:animate-in motion-safe:fade-in">
-      <section className="flex w-full flex-col gap-3 rounded-2xl bg-card p-5 shadow-card">
+    <div className="absolute inset-0 z-10 flex items-start justify-center overflow-y-auto bg-[rgb(15_18_23/.35)] p-3 backdrop-blur-[6px] motion-safe:animate-in motion-safe:fade-in">
+      <section className="flex w-full flex-col gap-3 rounded-2xl border border-border bg-popover p-5 shadow-(--glass-shadow) backdrop-blur-xl backdrop-saturate-180">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-[22px] leading-tight font-semibold tracking-[-0.02em]">
             Рейс {round} из {LAST_ROUND}
@@ -34,7 +35,7 @@ export function Briefing({ round, onStart }: { round: Round; onStart: () => void
           ))}
         </ul>
         {opened.length > 0 && <p className="text-sm">Новые кнопки: {opened.join(", ")}</p>}
-        <Button onClick={onStart} className="h-12 text-[15px]">
+        <Button onClick={onStart} size="xl">
           {round === 1 ? "Начать посадку" : "Следующий рейс"}
         </Button>
       </section>
