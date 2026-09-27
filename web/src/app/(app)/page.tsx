@@ -11,6 +11,13 @@ import { SkillsCard } from "@/components/home/skills-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trainingOf, useSkills } from "@/lib/analytics";
 import { useScenarios } from "@/lib/scenarios";
+import { cn } from "@/lib/utils";
+
+// Карточки главной появляются лесенкой, каждая на 60 мс позже предыдущей. Классы выписаны целиком:
+// Tailwind находит их в исходнике, а собранные из кусков строки он не увидит
+const ENTER = "duration-300 fill-mode-both motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2";
+const DELAYS = ["delay-0", "delay-60", "delay-120", "delay-180", "delay-240", "delay-300", "delay-360"];
+const enter = (index: number) => cn(ENTER, DELAYS[index]);
 
 // Главная — табло прогресса и вход в следующую тренировку. Сетка 6 колонок на десктопе, как в макете:
 // главная карточка (4) и уровень (2), ниже репутация, рейтинг и навыки (по 2), затем сценарии (3) и ачивки (3). У каждой карточки свои загрузка и ошибка
@@ -25,7 +32,7 @@ export default function HomePage() {
 
   return (
     <div className="grid gap-3 lg:grid-cols-6 lg:gap-5">
-      <div className="flex min-w-0 flex-col gap-2 lg:col-span-4">
+      <div className={cn("flex min-w-0 flex-col gap-2 lg:col-span-4", enter(0))}>
         {isPending ? (
           <>
             <Skeleton className="h-11 rounded-lg" />
@@ -42,12 +49,12 @@ export default function HomePage() {
           </>
         )}
       </div>
-      <LevelCard className="lg:col-span-2" />
-      <ReputationCard className="lg:col-span-2" />
-      <RatingCard className="lg:col-span-2" />
-      <SkillsCard className="lg:col-span-2" />
-      {scenarios && scenarios.length > 0 && <ScenariosCard scenarios={scenarios} className="lg:col-span-3" />}
-      <AchievementsCard className="lg:col-span-3" />
+      <LevelCard className={cn("lg:col-span-2", enter(1))} />
+      <ReputationCard className={cn("lg:col-span-2", enter(2))} />
+      <RatingCard className={cn("lg:col-span-2", enter(3))} />
+      <SkillsCard className={cn("lg:col-span-2", enter(4))} />
+      {scenarios && scenarios.length > 0 && <ScenariosCard scenarios={scenarios} className={cn("lg:col-span-3", enter(5))} />}
+      <AchievementsCard className={cn("lg:col-span-3", enter(6))} />
     </div>
   );
 }

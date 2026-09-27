@@ -29,6 +29,7 @@ const NAV: NavItem[] = [
 // шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
+  const pathname = usePathname();
 
   if (isPending) {
     return (
@@ -54,7 +55,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-7 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
             <ProfileHeader me={me} />
-            {children}
+            {/* Новая страница мягко всплывает: ключ по адресу пересоздаёт блок при переходе */}
+            <div
+              key={pathname}
+              className="flex flex-1 flex-col gap-3 duration-200 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 lg:gap-5"
+            >
+              {children}
+            </div>
           </main>
           <BottomNav />
         </div>
