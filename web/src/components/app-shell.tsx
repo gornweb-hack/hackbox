@@ -3,12 +3,14 @@
 import { BookOpenIcon, Gamepad2Icon, HouseIcon, TrophyIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ProfileHeader } from "@/components/profile-header";
+import { SplashScreen } from "@/components/speed-loader";
 import { TabBar, type NavItem } from "@/components/tab-bar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMe } from "@/lib/auth";
+import { type Me, useMe } from "@/lib/auth";
 import { EventStreamProvider } from "@/lib/events";
+import { MIN_SPLASH_MS, SPLASH_SEEN_KEY } from "@/lib/loader-timeline";
 import { cn } from "@/lib/utils";
 
 // Разделы тренажёра. Администрирование — в меню аватара (ProfileHeader)
@@ -20,29 +22,36 @@ const NAV: NavItem[] = [
   { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-// Каркас для вошедших: сайдбар на десктопе, таб-бар «Капля» на телефоне,
+// Каркас для вошедших: заставка «Разгон до 400», сайдбар на десктопе, таб-бар «Капля» на телефоне,
 // шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
+  const splash = useSplash();
+
+  return (
+    <>
+      {/* Заставка поверх: под ней грузится профиль и главная, поэтому после неё данные уже на месте */}
+      {splash && <SplashScreen />}
+      {isPending ? (
+        <div className="flex w-full flex-col gap-3 p-4 lg:p-8">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-72 w-full" />
+        </div>
+      ) : isError || !me ? (
+        // Потерю сессии обрабатывает клиент API (переход на /login); здесь — сбой сети или ядра
+        <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-muted-foreground">
+          Не удалось загрузить данные. Проверьте связь и обновите страницу.
+        </div>
+      ) : (
+        <Shell me={me}>{children}</Shell>
+      )}
+    </>
+  );
+}
+
+function Shell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = usePathname();
   const isActive = useActive();
-
-  if (isPending) {
-    return (
-      <div className="flex w-full flex-col gap-3 p-4 lg:p-8">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-72 w-full" />
-      </div>
-    );
-  }
-  if (isError || !me) {
-    // Потерю сессии обрабатывает клиент API (переход на /login); здесь — сбой сети или ядра
-    return (
-      <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-muted-foreground">
-        Не удалось загрузить данные. Проверьте связь и обновите страницу.
-      </div>
-    );
-  }
 
   return (
     <EventStreamProvider>
@@ -64,6 +73,34 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </EventStreamProvider>
   );
+}
+
+// Заставка — один раз во вкладке: после входа или в новой вкладке, на MIN_SPLASH_MS, чтобы разгон дошёл
+// до названия. Перезагрузки в той же вкладке её не показывают
+function useSplash() {
+  const [running, setRunning] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return !sessionStorage.getItem(SPLASH_SEEN_KEY);
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (!running) return;
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
+      } catch {
+        // Хранилище недоступно (приватный режим) — заставка просто покажется снова
+      }
+      setRunning(false);
+    }, MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, [running]);
+
+  return running;
 }
 
 function useActive() {

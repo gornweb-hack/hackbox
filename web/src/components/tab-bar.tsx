@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
+import { GLASS_RIM } from "@/lib/glass";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -64,16 +65,6 @@ const GLASS: CSSProperties = {
   WebkitBackdropFilter: "blur(22px) saturate(190%)",
   boxShadow:
     "inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 1px rgba(255,255,255,.4), 0 1px 1px rgba(20,30,60,.05), 0 16px 36px -14px rgba(20,40,110,.38)",
-};
-
-// Блик по кромке: градиентная рамка в 1px, середину вырезает маска
-const RIM: CSSProperties = {
-  padding: 1,
-  background:
-    "linear-gradient(150deg, rgba(255,255,255,.98), rgba(255,255,255,.2) 32%, rgba(255,255,255,0) 55%, rgba(255,255,255,.35) 82%, rgba(255,255,255,.8))",
-  WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-  WebkitMaskComposite: "xor",
-  maskComposite: "exclude",
 };
 
 // Мобильная навигация: стеклянная капсула, активный пункт — синяя капля.
@@ -268,7 +259,7 @@ export function TabBar({ items, active }: { items: NavItem[]; active: number }) 
           style={GLASS}
           className="relative h-16 cursor-pointer touch-none rounded-full border border-white/65 select-none"
         >
-          <span aria-hidden style={RIM} className="pointer-events-none absolute inset-0 rounded-[inherit]" />
+          <span aria-hidden style={GLASS_RIM} className="pointer-events-none absolute inset-0 rounded-[inherit]" />
 
           <div
             aria-hidden

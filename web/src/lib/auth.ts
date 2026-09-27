@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
+import { SPLASH_SEEN_KEY } from "./loader-timeline";
 
 export type Role = "USER" | "MANAGER" | "ADMIN";
 
@@ -35,6 +36,12 @@ export function useLogout() {
   return async () => {
     await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     queryClient.clear();
+    // Следующий вход в этой вкладке снова покажет заставку
+    try {
+      sessionStorage.removeItem(SPLASH_SEEN_KEY);
+    } catch {
+      // Хранилище недоступно — отметки там и нет
+    }
     // Полная перезагрузка: закрыть SSE и не оставить в памяти данные прежнего пользователя
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign("/login");
