@@ -7,6 +7,7 @@ import { ANALYTICS_KEY } from "./analytics";
 import { refreshSession } from "./api";
 import { GAMIFICATION_KEY } from "./gamification";
 import { NOTIFICATIONS_KEY } from "./notifications";
+import { USERS_KEY } from "./users";
 
 // Событие из SSE /api/stream — конверт события (docs/events.md)
 interface AppEvent {
@@ -44,7 +45,7 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
         const show = level === "success" ? toast.success : level === "warning" ? toast.warning : toast.info;
         show(title ?? "Уведомление", { description: message });
       } else if (event.type.startsWith("user.")) {
-        void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({ queryKey: USERS_KEY });
       } else if (event.type === "progress.updated") {
         void queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEY });
       } else if (event.type === "scenario.completed") {

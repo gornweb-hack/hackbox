@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PencilIcon, PlusIcon } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -13,21 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { api, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { type Role, ROLE_LABELS } from "@/lib/auth";
+import { type User, useSaveUser, useUsers } from "@/lib/users";
 
-interface User {
-  id: string;
-  login: string;
-  name: string;
-  email: string | null;
-  role: Role;
-  crew: string | null;
-  depot: string | null;
-  createdAt: string;
-}
-
-const USERS_KEY = ["users"] as const;
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
 // «Бригада 3 · Депо Москва-ВСМ» или null, если ничего не назначено
@@ -35,10 +23,7 @@ const crewOf = (user: User) => [user.crew, user.depot].filter(Boolean).join(" ·
 
 // Сотрудники: список, создание и правка. Аккаунты заводит администратор
 export default function UsersPage() {
-  const { data, isPending } = useQuery({
-    queryKey: USERS_KEY,
-    queryFn: () => api<{ items: User[]; total: number }>("/api/users"),
-  });
+  const { data, isPending } = useUsers();
   const [editing, setEditing] = useState<User | "new" | null>(null);
 
   return (
@@ -121,19 +106,9 @@ export default function UsersPage() {
 
 // Создание (user === "new") или правка сотрудника
 function UserDialog({ user, onClose }: { user: User | "new" | null; onClose: () => void }) {
-  const queryClient = useQueryClient();
   const isNew = user === "new";
   const current = isNew ? null : user;
-
-  const save = useMutation({
-    mutationFn: (body: Record<string, string>) =>
-      isNew ? api<User>("/api/users", { method: "POST", body }) : api<User>(`/api/users/${current!.id}`, { method: "PATCH", body }),
-    onSuccess: (saved) => {
-      void queryClient.invalidateQueries({ queryKey: USERS_KEY });
-      toast.success(isNew ? `Сотрудник ${saved.name} добавлен` : "Изменения сохранены");
-      onClose();
-    },
-  });
+  const save = useSaveUser(current?.id ?? null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,7 +118,12 @@ function UserDialog({ user, onClose }: { user: User | "new" | null; onClose: () 
     const body = Object.fromEntries(
       [...form.entries()].filter(([key, value]) => value !== "" || ((key === "crew" || key === "depot") && current?.[key])),
     ) as Record<string, string>;
-    save.mutate(body);
+    save.mutate(body, {
+      onSuccess: (saved) => {
+        toast.success(isNew ? `Сотрудник ${saved.name} добавлен` : "Изменения сохранены");
+        onClose();
+      },
+    });
   }
 
   const error = save.error instanceof ApiError ? save.error.message : save.error ? "Не удалось сохранить" : null;
