@@ -1,26 +1,22 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { StatusBadge } from "@/components/status-badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useHealth, useModules } from "@/lib/modules";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { api, ApiError } from "@/lib/api";
+import { useHealth } from "@/lib/health";
 
 const SERVICES = [
-  { key: "core", title: "Ядро", description: "Вход, прокси в модули, уведомления" },
-  { key: "db", title: "База данных", description: "Пользователи и данные модулей" },
-  { key: "redis", title: "Redis", description: "События между модулями" },
+  { key: "core", title: "Ядро", description: "Вход, сотрудники, уведомления" },
+  { key: "db", title: "База данных", description: "Сотрудники и данные приложения" },
+  { key: "redis", title: "Redis", description: "События и уведомления" },
 ] as const;
 
-function formatTime(iso: string | null) {
-  return iso ? new Date(iso).toLocaleTimeString("ru-RU") : "—";
-}
-
-// Состояние системы: здоровье ядра, базы и Redis (опрос раз в 10 с)
-// и модули — строка меняется сразу, как только модуль упал или поднялся
+// Состояние системы: здоровье ядра, базы и Redis (опрос раз в 10 с) и демо-данные для показа
 export default function SystemStatusPage() {
   const { data: health } = useHealth();
-  const { data: modules, isPending } = useModules();
 
   return (
     <>
@@ -37,44 +33,34 @@ export default function SystemStatusPage() {
           </Card>
         ))}
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Модули</CardTitle>
-          <CardDescription>
-            Ядро проверяет каждый модуль раз в 5 секунд. Лежащий модуль скрывается у пользователей, остальное
-            работает.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isPending ? (
-            <Skeleton className="h-24 w-full" />
-          ) : !modules?.length ? (
-            <p className="text-sm text-muted-foreground">Модули не подключены.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Модуль</TableHead>
-                  <TableHead>Состояние</TableHead>
-                  <TableHead className="text-right">Проверен</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {modules.map((module) => (
-                  <TableRow key={module.name}>
-                    <TableCell className="font-medium">{module.name}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={module.status} />
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">{formatTime(module.checkedAt)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DemoHistoryCard />
     </>
+  );
+}
+
+// Прохождения синтетического штата за три недели — чтобы рейтингу и репутации было что показать.
+// Повтор безопасен: ядро пропускает сотрудников, у которых уже есть прохождения
+function DemoHistoryCard() {
+  const generate = useMutation({
+    mutationFn: () => api<{ users: number; runs: number }>("/api/scenarios/demo-history", { method: "POST" }),
+    onSuccess: ({ users, runs }) =>
+      users > 0
+        ? toast.success("Демо-история готова", { description: `Сотрудников: ${users}, прохождений: ${runs}` })
+        : toast.info("Демо-история уже есть", { description: "У всех сотрудников штата есть прохождения" }),
+    onError: (error) => toast.warning("Демо-история не создана", { description: error instanceof ApiError ? error.message : undefined }),
+  });
+
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>Демо-история</CardTitle>
+        <CardDescription>Прохождения синтетических сотрудников за последние три недели — для рейтинга и репутации.</CardDescription>
+        <CardAction>
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+            {generate.isPending ? "Генерируем…" : "Сгенерировать"}
+          </Button>
+        </CardAction>
+      </CardHeader>
+    </Card>
   );
 }

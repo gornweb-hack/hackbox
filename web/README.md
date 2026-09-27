@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# web — интерфейс «Рейс 400»
 
-## Getting Started
+Next.js 16, React 19, Tailwind 4, shadcn/ui на Base UI, TanStack Query. Браузер ходит только сюда: `/api/*` Next проксирует в ядро (`next.config.ts`, адрес — `CORE_URL`, по умолчанию `http://127.0.0.1:4000`).
 
-First, run the development server:
+## Запуск без Docker
+
+Проще всего — `npm run dev` в корне: он сам поднимет ядро, базу и Redis в Docker ([README](../README.md#разработка)). Вручную — ядро, Postgres и Redis должны работать (`docker compose up -d core` в корне), затем в `web/`:
 
 ```bash
+npm install
+```
+```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Интерфейс — [http://localhost:3000](http://localhost:3000). Проверки: `npm test`, `npm run lint`, `npm run build`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Где что лежит
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Путь | Что там |
+|---|---|
+| `src/app/login` | вход |
+| `src/app/(app)/page.tsx` | главная — табло прогресса |
+| `src/app/(app)/scenarios` | каталог, вступление, прохождение и разбор (`runs/[runId]`) |
+| `src/app/(app)/rating`, `profile` | рейтинг и профиль: навыки, полка ачивок, история |
+| `src/app/(app)/notifications` | центр уведомлений |
+| `src/app/(app)/games` | мини-игры — разминка одного навыка, опыт и шкалы не меняют |
+| `src/app/(app)/admin` | состояние системы, демо-история, сотрудники |
+| `src/components/home` | карточки главной |
+| `src/components/run` | плеер прохождения, сцена вагона, разбор, награда |
+| `src/lib` | запросы к API по модулям ядра, события SSE (`events.tsx`), расчёты для отрисовки |
+| `src/proxy.ts` | без сессии — на `/login` (в Next 16 это бывший `middleware`) |
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Правила для ИИ-агентов по Next 16 — в [AGENTS.md](AGENTS.md).

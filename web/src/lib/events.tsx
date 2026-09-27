@@ -1,25 +1,24 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect } from "react";
 import { toast } from "sonner";
+import { ANALYTICS_KEY } from "./analytics";
 import { refreshSession } from "./api";
-import { type ModuleInfo, MODULES_KEY } from "./modules";
+import { GAMIFICATION_KEY } from "./gamification";
+import { NOTIFICATIONS_KEY } from "./notifications";
+import { USERS_KEY } from "./users";
 
-// Событие из SSE /api/stream — конверт из контракта (docs/module-contract.md, раздел «События»)
-export interface AppEvent<T = unknown> {
+// Событие из SSE /api/stream — конверт события (docs/events.md)
+interface AppEvent {
   id?: string;
   type: string;
   source?: string;
   time?: string;
   userId?: string;
   broadcast?: boolean;
-  data: T;
+  data: unknown;
 }
-
-type Listener = (event: AppEvent) => void;
-
-const ListenersContext = createContext<Map<string, Set<Listener>> | null>(null);
 
 interface Notification {
   title?: string;
@@ -28,11 +27,11 @@ interface Notification {
 }
 
 // Одно подключение к /api/stream на всё приложение.
-// Уведомления → тосты, module.status → мгновенно обновить статусы, user.* → перечитать сотрудников.
+// Уведомления → тосты, user.* → перечитать сотрудников, progress.updated → перечитать прогресс и награду,
+// scenario.completed → перечитать навыки, notifications.updated → перечитать центр уведомлений.
 // При обрыве: закрыть, обновить сессию и переподключиться с паузой 1…10 с
 export function EventStreamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [listeners] = useState(() => new Map<string, Set<Listener>>());
 
   useEffect(() => {
     let source: EventSource | null = null;
@@ -45,15 +44,15 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
         const { title, message, level } = event.data as Notification;
         const show = level === "success" ? toast.success : level === "warning" ? toast.warning : toast.info;
         show(title ?? "Уведомление", { description: message });
-      } else if (event.type === "module.status") {
-        const change = event.data as Pick<ModuleInfo, "name" | "status">;
-        queryClient.setQueryData<ModuleInfo[]>(MODULES_KEY, (modules) =>
-          modules?.map((module) => (module.name === change.name ? { ...module, status: change.status } : module)),
-        );
       } else if (event.type.startsWith("user.")) {
-        void queryClient.invalidateQueries({ queryKey: ["users"] });
+        void queryClient.invalidateQueries({ queryKey: USERS_KEY });
+      } else if (event.type === "progress.updated") {
+        void queryClient.invalidateQueries({ queryKey: GAMIFICATION_KEY });
+      } else if (event.type === "scenario.completed") {
+        void queryClient.invalidateQueries({ queryKey: ANALYTICS_KEY });
+      } else if (event.type === "notifications.updated") {
+        void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
       }
-      for (const listener of listeners.get(event.type) ?? []) listener(event);
     };
 
     const connect = () => {
@@ -89,28 +88,7 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
       clearTimeout(retryTimer);
       source?.close();
     };
-  }, [queryClient, listeners]);
+  }, [queryClient]);
 
-  return <ListenersContext.Provider value={listeners}>{children}</ListenersContext.Provider>;
-}
-
-// Подписка на события своего типа, например useEvent("points.awarded", () => refetch())
-export function useEvent<T = unknown>(type: string, handler: (event: AppEvent<T>) => void) {
-  const listeners = useContext(ListenersContext);
-  const handlerRef = useRef(handler);
-
-  useEffect(() => {
-    handlerRef.current = handler;
-  });
-
-  useEffect(() => {
-    if (!listeners) return;
-    const listener: Listener = (event) => handlerRef.current(event as AppEvent<T>);
-    const set = listeners.get(type) ?? new Set<Listener>();
-    set.add(listener);
-    listeners.set(type, set);
-    return () => {
-      set.delete(listener);
-    };
-  }, [listeners, type]);
+  return children;
 }

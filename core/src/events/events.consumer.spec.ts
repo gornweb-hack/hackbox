@@ -70,6 +70,25 @@ describe('EventsConsumer', () => {
     expect(commands(redis, 'XACK')).toEqual([]);
   });
 
+  it('обработчик модуля получает событие своего типа, чужие — нет', async () => {
+    const received: string[] = [];
+    consumer.on('scenario.completed', async (event) => {
+      received.push(event.type);
+    });
+    await consumer.process('1-0', toStreamFields(createEnvelope('scenario.completed', {}, 'core', { userId: 'u1' })));
+    await consumer.process('2-0', toStreamFields(createEnvelope('user.created', {}, 'core')));
+    expect(received).toEqual(['scenario.completed']);
+    expect(commands(redis, 'XACK')).toHaveLength(2);
+  });
+
+  it('ошибка обработчика модуля — без XACK, событие придёт снова', async () => {
+    consumer.on('scenario.completed', async () => {
+      throw new Error('база недоступна');
+    });
+    await consumer.process('1-0', toStreamFields(createEnvelope('scenario.completed', {}, 'core', { userId: 'u1' })));
+    expect(commands(redis, 'XACK')).toEqual([]);
+  });
+
   it('нечитаемая запись сразу уходит в DLQ', async () => {
     await consumer.process('1-0', ['type', 'x', 'event', 'not json']);
     expect(commands(redis, 'XADD')[0].slice(0, 1)).toEqual([DLQ_STREAM]);

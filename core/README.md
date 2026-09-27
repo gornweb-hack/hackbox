@@ -1,6 +1,6 @@
 # core — ядро hackbox
 
-Nest.js 12 (ESM), Prisma 7, Node 24. Что делает ядро и какие у него эндпоинты, описано в [корневом README](../README.md#ядро).
+Nest.js 12 (ESM), Prisma 7, Node 24. Это весь бэкенд — одно приложение из модулей Nest. Схема модулей — в [корневом README](../README.md#архитектура), эндпоинты — в [справочнике API](../docs/api.md). Как добавить свой модуль — в [онбординге](../docs/onboarding.md).
 
 ## Запуск
 
@@ -14,7 +14,7 @@ npm install
 npm run start:dev
 ```
 
-База и Redis при этом должны работать в Docker (`docker compose up -d postgres db-init redis` из корня). Модули, запущенные у вас на хосте, указываются через `MODULE_URL_<NAME>` в `.env`. Nest CLI 12 требует Node 24.15 или новее.
+База и Redis при этом должны работать в Docker (`docker compose up -d postgres db-init redis` из корня), а контейнер ядра — быть остановлен (`docker compose stop core`), чтобы освободить порт 4000. Nest CLI 12 требует Node 24.15 или новее.
 
 ## Команды
 
@@ -29,15 +29,19 @@ npm run start:dev
 
 | Путь | Что там |
 |---|---|
-| `src/main.ts` | запуск: прокси подключён до разбора тела запроса, поэтому JSON и файлы уходят в модуль как есть |
-| `src/modules-registry/` | реестр модулей: опрос `/health` каждые 5 с, `GET /api/modules` |
-| `src/proxy/module-proxy.ts` | прокси `/api/m/<name>/*`: 404, 503 без ожидания, 504 по таймауту; ставит модулю `X-User-Id` и `X-User-Role` |
-| `src/auth/` | вход: `tokens.ts` (access-JWT из cookie или Bearer), `auth.service.ts` (вход, refresh с ротацией, выход, регистрация), `auth.guard.ts` (`AuthGuard`, `@Roles`, `@CurrentUser`), `password.ts` (scrypt), `seed.ts` (демо-аккаунты при старте) |
-| `src/users/` | `GET /api/users`, `POST` и `PATCH /api/users` для админа; публикует `user.created` и `user.updated` |
-| `src/events/` | события: `events.service.ts` (публикация по принципу «лучшее усилие»), `events.consumer.ts` (группа `core`: чтение, повторы, DLQ — образец для хелперов Go и Python), `envelope.ts` (конверт), `stream.controller.ts` (SSE `/api/stream`), `redis.ts` (подключения) |
-| `src/health/` | `GET /api/health` с проверкой базы и статусом Redis |
-| `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id` |
-| `prisma/schema.prisma` | схема ядра в `public`: `users`, `refresh_tokens`. Клиент генерируется в `src/generated/` при `npm install` |
+| `src/main.ts` | запуск: префикс `/api`, cookie, формат ошибок, валидация (`422 VALIDATION_ERROR`), Swagger |
+| `src/app.module.ts` | список модулей приложения |
+| `src/auth/` | `AuthModule` (`auth.module.ts`) — вход и сотрудники. Внутри: `tokens.ts` (access-JWT из cookie или Bearer), `auth.service.ts` (вход, refresh с ротацией, выход, регистрация), `auth.guard.ts` (`AuthGuard`, `@Roles`, `@CurrentUser`), `password.ts` (scrypt), `seed.ts` (демо-аккаунты при старте) |
+| `src/users/` | часть `AuthModule`: `GET /api/users`, `POST` и `PATCH /api/users` для админа; публикует `user.created` и `user.updated` |
+| `src/events/` | `EventsModule`: `events.service.ts` (публикация по принципу «лучшее усилие»), `events.consumer.ts` (группа `core`: чтение, повторы, DLQ; модули подписываются через `on`), `envelope.ts` (конверт), `stream.controller.ts` (SSE `/api/stream`), `redis.ts` (подключения). Правила — в [памятке по событиям](../docs/events.md) |
+| `src/prisma/` | `PrismaModule`: одно подключение к базе на всё приложение |
+| `src/health/` | `HealthModule`: `GET /api/health` с проверкой базы и статусом Redis |
+| `src/scenarios/` | `ScenariosModule`: каталог из `content/scenarios/*.yaml` (файлы читаются при каждом запросе) и прохождения `/api/scenarios/runs`. `script.ts` — формат диалога, `engine.ts` — правила: шкалы, переходы, таймер. `runs.service.ts` хранит прохождения и в финале публикует `scenario.completed`. Формат — в [памятке по контенту](../docs/content.md) |
+| `src/gamification/` | `GamificationModule`: подписан на `scenario.completed`, ведёт журнал `gamification_runs`. `rules.ts` — правила из `content/gamification.yaml`, `progress.ts` — опыт, уровень и репутация, `achievements.ts` — полученные ачивки, ачивки прохождения и прогресс к следующей, `rating.ts` — места за месяц. `GET /api/gamification/me/progress`, `GET /api/gamification/me/achievements`, `GET /api/gamification/runs/:runId/reward` и `GET /api/gamification/rating`, события `progress.updated` и тосты о новом уровне и ачивках |
+| `src/analytics/` | `AnalyticsModule`: навыки по решениям и меткам `skills` из `content/skills.yaml`. `skills.ts` — процент, слабый навык и рекомендация. Своей таблицы нет: решения — через `RunsService`, сценарии — через `ScenariosService`. `GET /api/analytics/me/skills` |
+| `src/notifications/` | `NotificationsModule`: подписан на `notification.requested`, пишет строку каждому получателю в `notifications_items`. `notification.ts` — получатели и содержимое. `GET /api/notifications` и `POST /api/notifications/read`, событие `notifications.updated` |
+| `src/common/` | формат ошибок `{code, message}`, `503 DB_UNAVAILABLE` при недоступной базе, `X-Request-Id`, `swagger.ts` — документ API на `/api/docs` (схемы DTO строит плагин в `nest-cli.json`) |
+| `prisma/schema.prisma` | схема в `public`: `users`, `refresh_tokens` и таблицы модулей. Клиент генерируется в `src/generated/` при `npm install`. Правила — в [памятке по базе](../docs/database.md) |
 
 Закрыть свой эндпоинт входом и ролью:
 

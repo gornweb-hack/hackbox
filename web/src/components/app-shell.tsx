@@ -1,132 +1,145 @@
 "use client";
 
-import { LogOutIcon, MenuIcon } from "lucide-react";
+import { BookOpenIcon, Gamepad2Icon, HouseIcon, TrophyIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { type ReactNode, useEffect, useState } from "react";
+import { ProfileHeader } from "@/components/profile-header";
+import { SplashScreen } from "@/components/speed-loader";
+import { TabBar, type NavItem } from "@/components/tab-bar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type Me, type Role, ROLE_LABELS, useLogout, useMe } from "@/lib/auth";
+import { type Me, useMe } from "@/lib/auth";
 import { EventStreamProvider } from "@/lib/events";
+import { MIN_SPLASH_MS, SPLASH_SEEN_KEY } from "@/lib/loader-timeline";
 import { cn } from "@/lib/utils";
 
-interface NavItem {
-  href: string;
-  label: string;
-  roles?: Role[];
-}
-
-// Пункты меню. Модули на хакатоне добавляют сюда свои разделы
+// Разделы тренажёра. Администрирование — в меню аватара (ProfileHeader)
 const NAV: NavItem[] = [
-  { href: "/", label: "Главная" },
-  { href: "/admin", label: "Администрирование", roles: ["ADMIN"] },
+  { href: "/", label: "Главная", icon: HouseIcon },
+  { href: "/scenarios", label: "Сценарии", icon: BookOpenIcon },
+  { href: "/games", label: "Мини-игры", icon: Gamepad2Icon },
+  { href: "/rating", label: "Рейтинг", icon: TrophyIcon },
+  { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-// Каркас для вошедших: шапка с меню по ролям, выход, одно SSE-подключение на всё приложение
+// Каркас для вошедших: заставка «Разгон до 400», стеклянный сайдбар на десктопе, таб-бар «Капля» на телефоне,
+// шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
+  const splash = useSplash();
 
-  if (isPending) {
-    return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-  if (isError || !me) {
-    // Потерю сессии обрабатывает клиент API (переход на /login); здесь — сбой сети или ядра
-    return (
-      <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-muted-foreground">
-        Не удалось загрузить данные. Проверьте связь и обновите страницу.
-      </div>
-    );
-  }
+  return (
+    <>
+      {/* Заставка поверх: под ней грузится профиль и главная, поэтому после неё данные уже на месте */}
+      {splash && <SplashScreen />}
+      {isPending ? (
+        <div className="flex w-full flex-col gap-3 p-4 lg:p-8">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-72 w-full" />
+        </div>
+      ) : isError || !me ? (
+        // Потерю сессии обрабатывает клиент API (переход на /login); здесь — сбой сети или ядра
+        <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-muted-foreground">
+          Не удалось загрузить данные. Проверьте связь и обновите страницу.
+        </div>
+      ) : (
+        <Shell me={me}>{children}</Shell>
+      )}
+    </>
+  );
+}
 
-  const items = NAV.filter((item) => !item.roles || item.roles.includes(me.role));
+function Shell({ me, children }: { me: Me; children: ReactNode }) {
+  const pathname = usePathname();
+  const isActive = useActive();
+
   return (
     <EventStreamProvider>
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-4 px-4">
-          <MobileNav items={items} me={me} />
-          <Link href="/" className="font-semibold">
-            hackbox
-          </Link>
-          <nav className="hidden items-center gap-1 md:flex">
-            {items.map((item) => (
-              <NavLink key={item.href} item={item} />
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <UserBadge me={me} className="hidden sm:flex" />
-            <LogoutButton />
-          </div>
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-28 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
+            <ProfileHeader me={me} />
+            {/* Новая страница мягко всплывает: ключ по адресу пересоздаёт блок при переходе */}
+            <div
+              key={pathname}
+              className="flex flex-1 flex-col gap-3 duration-200 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 lg:gap-5"
+            >
+              {children}
+            </div>
+          </main>
+          <TabBar items={NAV} active={NAV.findIndex(({ href }) => isActive(href))} />
         </div>
-      </header>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4">{children}</main>
+      </div>
     </EventStreamProvider>
   );
 }
 
-function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+// Заставка — один раз во вкладке: после входа или в новой вкладке, на MIN_SPLASH_MS, чтобы разгон дошёл
+// до названия. Перезагрузки в той же вкладке её не показывают
+function useSplash() {
+  const [running, setRunning] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return !sessionStorage.getItem(SPLASH_SEEN_KEY);
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (!running) return;
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem(SPLASH_SEEN_KEY, "1");
+      } catch {
+        // Хранилище недоступно (приватный режим) — заставка просто покажется снова
+      }
+      setRunning(false);
+    }, MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, [running]);
+
+  return running;
 }
 
-function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+function useActive() {
   const pathname = usePathname();
-  return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-        isActive(pathname, item.href) && "bg-muted font-medium text-foreground",
-      )}
-    >
-      {item.label}
-    </Link>
-  );
+  return (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 }
 
-function UserBadge({ me, className }: { me: Me; className?: string }) {
+function Sidebar() {
+  const isActive = useActive();
   return (
-    <div className={cn("items-center gap-2 text-sm", className)}>
-      <span className="font-medium">{me.name}</span>
-      <Badge variant="secondary">{ROLE_LABELS[me.role]}</Badge>
-    </div>
-  );
-}
-
-function LogoutButton() {
-  const logout = useLogout();
-  return (
-    <Button variant="ghost" size="icon" onClick={() => void logout()} aria-label="Выйти" title="Выйти">
-      <LogOutIcon />
-    </Button>
-  );
-}
-
-// На телефоне — меню-гамбургер с боковой панелью
-function MobileNav({ items, me }: { items: NavItem[]; me: Me }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden" aria-label="Меню" />}>
-        <MenuIcon />
-      </SheetTrigger>
-      <SheetContent side="left">
-        <SheetHeader>
-          <SheetTitle>hackbox</SheetTitle>
-          <UserBadge me={me} className="flex" />
-        </SheetHeader>
-        <nav className="flex flex-col gap-1 px-4">
-          {items.map((item) => (
-            <NavLink key={item.href} item={item} onClick={() => setOpen(false)} />
-          ))}
-        </nav>
-      </SheetContent>
-    </Sheet>
+    <aside className="glass sticky top-4 m-4 mr-0 hidden h-[calc(100svh-32px)] w-[248px] shrink-0 flex-col gap-7 rounded-2xl px-4 py-7 lg:flex">
+      <Link href="/" className="flex items-center gap-2.5 px-2.5">
+        {/* Логотип — «след скорости»: три линии, короче и прозрачнее к хвосту */}
+        <span aria-hidden className="flex w-[22px] flex-col items-end gap-[3px]">
+          <span className="h-0.5 w-full rounded-full bg-primary" />
+          <span className="h-0.5 w-[70%] rounded-full bg-primary opacity-60" />
+          <span className="h-0.5 w-[45%] rounded-full bg-primary opacity-35" />
+        </span>
+        <span className="flex flex-col">
+          <span className="text-[17px] font-semibold tracking-[-0.01em]">Рейс 400</span>
+          <span className="text-xs text-muted-foreground">Тренажёр проводника</span>
+        </span>
+      </Link>
+      <nav className="flex flex-col gap-1">
+        {NAV.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={isActive(href) ? "page" : undefined}
+            className={cn(
+              "flex h-11 items-center gap-3 rounded-full px-3.5 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-muted",
+              "aria-[current=page]:bg-primary-soft aria-[current=page]:font-semibold aria-[current=page]:text-primary-text outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            )}
+          >
+            <Icon className="size-5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </aside>
   );
 }

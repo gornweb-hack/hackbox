@@ -1,0 +1,122 @@
+"use client";
+
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { api, type List } from "./api";
+
+export interface Level {
+  // Скорость уровня, км/ч — подпись вагона в карточке «Уровень»
+  speed: number;
+  title: string;
+  // Сколько опыта нужно для уровня
+  xp: number;
+}
+
+export interface ScaleAverage {
+  value: number;
+  // null — неделю назад прохождений ещё не было
+  weekDelta: number | null;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+}
+
+// Ачивки на главной: сколько получено, последняя и следующая с прогрессом
+export interface AchievementsSummary {
+  earned: number;
+  total: number;
+  // isNew — получена последним прохождением
+  latest: (Achievement & { isNew: boolean }) | null;
+  // share — доля пути 0–1; null — у ачивки нет промежуточного прогресса
+  next: (Achievement & { share: number | null; text: string | null }) | null;
+}
+
+// Прогресс из ядра (GET /api/gamification/me/progress). Правила — в content/gamification.yaml
+export interface Progress {
+  xp: number;
+  lastRunXp: number | null;
+  level: Level;
+  next: Level | null;
+  // Доля пути от текущего уровня к следующему, 0–1
+  progress: number;
+  levels: Level[];
+  reputation: { loyalty: ScaleAverage; safety: ScaleAverage; runs: number } | null;
+  achievements: AchievementsSummary;
+}
+
+// Ачивка на полке профиля (GET /api/gamification/me/achievements)
+export interface ShelfItem extends Achievement {
+  // Когда получена; null — ещё закрыта, тогда share и text — прогресс как у «Следующей»
+  earnedAt: string | null;
+  share: number | null;
+  text: string | null;
+}
+
+// Награда за одно прохождение (GET /api/gamification/runs/:runId/reward) — для разбора
+export interface Reward {
+  xp: number;
+  achievements: Achievement[];
+}
+
+export type RatingScope = "crew" | "depot" | "company";
+
+export interface RatingRow {
+  place: number;
+  userId: string;
+  name: string;
+  xp: number;
+  isMe: boolean;
+}
+
+// Рейтинг за месяц (GET /api/gamification/rating?scope=…). Правила мест — в core/src/gamification/rating.ts
+export interface Rating extends List<RatingRow> {
+  scope: RatingScope;
+  // «Бригада 3», «Депо Москва-ВСМ», «Компания»; null — бригада или депо не назначены
+  title: string | null;
+  // «2026-09»
+  month: string;
+  // null — вас нет в таблице: в этом месяце не было прохождений
+  me: { place: number; xp: number; gap: { place: number; xp: number } | null } | null;
+}
+
+// Всё из геймификации перечитывается по событию progress.updated (lib/events.tsx):
+// модуль записал прохождение, значит изменились и прогресс, и награда
+export const GAMIFICATION_KEY = ["gamification"] as const;
+
+export function useProgress() {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "progress"],
+    queryFn: () => api<Progress>("/api/gamification/me/progress"),
+  });
+}
+
+export function useShelf() {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "shelf"],
+    queryFn: () => api<List<ShelfItem>>("/api/gamification/me/achievements"),
+  });
+}
+
+// Пока событие о прохождении не обработано, ядро отвечает 404 REWARD_PENDING; повторять не нужно —
+// запрос перечитается сам по progress.updated
+export function useReward(runId: string) {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "reward", runId],
+    queryFn: () => api<Reward>(`/api/gamification/runs/${runId}/reward`),
+  });
+}
+
+// Своё место перечитывается по progress.updated, чужие прохождения — при следующем открытии страницы.
+// При смене среза прежняя таблица видна, пока грузится новая, — карточка не мигает
+export function useRating(scope: RatingScope) {
+  return useQuery({
+    queryKey: [...GAMIFICATION_KEY, "rating", scope],
+    queryFn: () => api<Rating>(`/api/gamification/rating?scope=${scope}`),
+    placeholderData: keepPreviousData,
+  });
+}
+
+// «1 360» — пробел между разрядами, как в макете
+export const formatXp = (xp: number) => xp.toLocaleString("ru-RU");

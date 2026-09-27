@@ -11,6 +11,9 @@ export interface UserProfile {
   name: string;
   email: string | null;
   role: Role;
+  crew: string | null;
+  depot: string | null;
+  avatar: string | null;
   createdAt: Date;
 }
 
@@ -20,6 +23,8 @@ export interface NewUser {
   name: string;
   email?: string;
   role?: Role;
+  crew?: string;
+  depot?: string;
 }
 
 export interface UserChanges {
@@ -27,14 +32,26 @@ export interface UserChanges {
   email?: string;
   role?: Role;
   password?: string;
+  crew?: string;
+  depot?: string;
+  // null — вернуть инициалы
+  avatar?: string | null;
 }
+
+// Портреты на выбор — внешности персонажей сценариев (web/src/components/run/scene/head.tsx).
+// Список дублирует фронт: ядро принимает только известные id
+export const AVATARS = ['conductor', 'chief', 'doctor', 'guard', 'elder', 'neighbour', 'man', 'redhead', 'woman'] as const;
+export type Avatar = (typeof AVATARS)[number];
+
+// Проводник для рейтинга и демо-истории
+export type StaffMember = Pick<User, 'id' | 'name' | 'crew' | 'depot'>;
 
 // Логин и email сравниваются без учёта регистра и пробелов по краям
 export const normalize = (value: string): string => value.trim().toLowerCase();
 
 export function toProfile(user: User): UserProfile {
-  const { id, login, name, email, role, createdAt } = user;
-  return { id, login, name, email, role, createdAt };
+  const { id, login, name, email, role, crew, depot, avatar, createdAt } = user;
+  return { id, login, name, email, role, crew, depot, avatar, createdAt };
 }
 
 @Injectable()
@@ -53,18 +70,34 @@ export class UsersService {
     return user && toProfile(user);
   }
 
-  // Публичные поля {id, name, role} — например, чтобы подписать рейтинг именами.
+  // Публичные поля {id, name, role, crew, depot} — например, чтобы подписать рейтинг именами.
   // С full = true (для админа) — ещё login, email и createdAt
   async list(
     ids: string[] | undefined,
     full: boolean,
-  ): Promise<{ items: (Pick<User, 'id' | 'name' | 'role'> & Partial<UserProfile>)[]; total: number }> {
+  ): Promise<{ items: (Pick<User, 'id' | 'name' | 'role' | 'crew' | 'depot'> & Partial<UserProfile>)[]; total: number }> {
     const items = await this.prisma.user.findMany({
       where: ids ? { id: { in: ids } } : undefined,
-      select: { id: true, name: true, role: true, ...(full && { login: true, email: true, createdAt: true }) },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        crew: true,
+        depot: true,
+        ...(full && { login: true, email: true, createdAt: true }),
+      },
       orderBy: { name: 'asc' },
     });
     return { items, total: items.length };
+  }
+
+  // Проводники с бригадой — участники рейтинга. Админ и руководитель в рейтинг не входят
+  listStaff(): Promise<StaffMember[]> {
+    return this.prisma.user.findMany({
+      where: { role: 'USER', crew: { not: null } },
+      select: { id: true, name: true, crew: true, depot: true },
+      orderBy: { name: 'asc' },
+    });
   }
 
   async create(data: NewUser): Promise<User> {
@@ -72,7 +105,15 @@ export class UsersService {
     const email = data.email ? normalize(data.email) : null;
     await this.ensureFree(login, email);
     const user = await this.prisma.user.create({
-      data: { login, email, name: data.name.trim(), role: data.role, passwordHash: await hashPassword(data.password) },
+      data: {
+        login,
+        email,
+        name: data.name.trim(),
+        role: data.role,
+        crew: data.crew?.trim() || null,
+        depot: data.depot?.trim() || null,
+        passwordHash: await hashPassword(data.password),
+      },
     });
     // Модули могут держать у себя копию имён — например, для рейтинга
     await this.events.publish('user.created', { id: user.id, name: user.name, role: user.role });
@@ -92,6 +133,10 @@ export class UsersService {
         name: changes.name?.trim(),
         email,
         role: changes.role,
+        // Пустая строка очищает поле
+        crew: changes.crew === undefined ? undefined : changes.crew.trim() || null,
+        depot: changes.depot === undefined ? undefined : changes.depot.trim() || null,
+        avatar: changes.avatar,
         passwordHash: changes.password ? await hashPassword(changes.password) : undefined,
       },
     });

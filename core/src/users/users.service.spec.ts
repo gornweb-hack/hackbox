@@ -7,9 +7,9 @@ describe('UsersService.list', () => {
   const findMany = vi.fn().mockResolvedValue([]);
   const service = new UsersService({ user: { findMany } } as unknown as PrismaService, {} as EventsService);
 
-  it('обычному пользователю — только публичные поля', async () => {
+  it('обычному пользователю — только публичные поля, включая бригаду и депо', async () => {
     await service.list(undefined, false);
-    expect(findMany).toHaveBeenLastCalledWith(expect.objectContaining({ select: { id: true, name: true, role: true } }));
+    expect(findMany).toHaveBeenLastCalledWith(expect.objectContaining({ select: { id: true, name: true, role: true, crew: true, depot: true } }));
   });
 
   it('админу — ещё login, email и createdAt', async () => {
@@ -17,7 +17,7 @@ describe('UsersService.list', () => {
     expect(findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({
         where: { id: { in: ['a'] } },
-        select: { id: true, name: true, role: true, login: true, email: true, createdAt: true },
+        select: { id: true, name: true, role: true, crew: true, depot: true, login: true, email: true, createdAt: true },
       }),
     );
   });

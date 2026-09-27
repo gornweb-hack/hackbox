@@ -41,6 +41,12 @@ export function refreshSession(): Promise<boolean> {
   return refreshing;
 }
 
+// Список из ответа API — формат из контракта: {items, total}
+export interface List<T> {
+  items: T[];
+  total: number;
+}
+
 export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
@@ -80,7 +86,7 @@ function send(path: string, { method = "GET", body, signal }: RequestOptions): P
   });
 }
 
-// Ошибки ядра и модулей приходят в формате контракта {code, message}
+// Ошибки ядра приходят в формате {code, message}
 async function toError(res: Response): Promise<ApiError> {
   try {
     const body = (await res.json()) as { code?: string; message?: string };

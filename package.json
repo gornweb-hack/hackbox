@@ -1,0 +1,7 @@
+{
+  "name": "hackbox",
+  "private": true,
+  "scripts": {
+    "dev": "docker compose stop web && docker compose up -d postgres redis core && npm --prefix web run dev"
+  }
+}

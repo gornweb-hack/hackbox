@@ -13,7 +13,7 @@ export class ApiError extends HttpException {
   }
 }
 
-// Для обработчиков вне Nest (прокси), где исключение бросить нельзя
+// Ответ с ошибкой прямо в Response — для фильтра ошибок, где бросать исключение уже поздно
 export function sendError(
   res: Response,
   status: number,

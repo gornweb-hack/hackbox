@@ -11,14 +11,8 @@ const env = process.env;
 export const config = {
   port: Number(env.PORT ?? 4000),
   databaseUrl: env.DATABASE_URL ?? '',
-  // Модули через запятую — тот же список, что у db-init
-  modules: (env.MODULES ?? '')
-    .split(',')
-    .map((name) => name.trim())
-    .filter(Boolean),
-  moduleTimeoutMs: Number(env.MODULE_TIMEOUT_MS ?? 10_000),
-  healthIntervalMs: 5_000,
-  healthTimeoutMs: 1_000,
+  // Папка content/ со сценариями и справочниками. Без Docker ядро запускается из core/
+  contentDir: env.CONTENT_DIR ?? '../content',
   events: {
     redisUrl: env.REDIS_URL ?? 'redis://localhost:6379',
     // Через сколько миллисекунд необработанное событие забирается на повтор
@@ -39,8 +33,3 @@ export const config = {
     seedDemoUsers: env.SEED_DEMO_USERS === 'true',
   },
 };
-
-// Адрес модуля: по умолчанию сервис compose, для модуля на хосте — MODULE_URL_<NAME>
-export function moduleUrl(name: string): string {
-  return env[`MODULE_URL_${name.toUpperCase()}`] ?? `http://${name}:8080`;
-}

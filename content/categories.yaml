@@ -1,0 +1,10 @@
+# Справочник категорий сценариев: id указывается в поле category сценария,
+# title показывается в интерфейсе
+- id: boarding
+  title: Посадка
+- id: service
+  title: Сервис
+- id: conflict
+  title: Конфликты
+- id: medical
+  title: Медицина и безопасность

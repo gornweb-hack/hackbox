@@ -55,9 +55,9 @@ function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm rounded-2xl">
       <CardHeader>
-        <CardTitle className="text-xl">Вход</CardTitle>
+        <CardTitle className="text-[26px] leading-tight tracking-[-0.025em]">Вход</CardTitle>
         <CardDescription>Логин — табельный номер, телефон или email</CardDescription>
       </CardHeader>
       <CardContent>
@@ -75,7 +75,7 @@ function LoginForm() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <Button type="submit" size="lg" disabled={pending}>
+          <Button type="submit" size="xl" disabled={pending}>
             {pending ? "Входим…" : "Войти"}
           </Button>
         </form>
