@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RunView } from "@/lib/runs";
-import { decisionTone, formatDelta, type Tone, zoneOf } from "@/lib/scales";
+import { decisionTone, type Tone } from "@/lib/scales";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { cn } from "@/lib/utils";
 import { ChoiceList } from "../choice-list";
@@ -15,10 +15,8 @@ import { Backdrop } from "./backdrop";
 import { Bust } from "./bust";
 import { emotionOf, type Role, stageFor } from "./cast";
 
-const ZONE_DOTS = { red: "bg-zone-red", yellow: "bg-zone-yellow", green: "bg-zone-green" };
-
 // Плеер в стиле визуальной новеллы: персонажи на сцене реагируют на решения, текст узла — в окне
-// реплики с плашкой имени, ниже таймер и варианты. Сверстан сначала под телефон: квадратная сцена,
+// реплики с плашкой имени, ниже таймер и варианты. Шкалы здесь не показываем — их итог в разборе. Сверстан сначала под телефон: квадратная сцена,
 // окно реплики наезжает на неё снизу, варианты сами докручиваются в поле зрения
 export function NovelPlayer({ run }: { run: RunView }) {
   const { decide, pending } = useDecide(run);
@@ -64,10 +62,6 @@ export function NovelPlayer({ run }: { run: RunView }) {
         <Backdrop station={stage?.station} />
         {stage?.left && <Sprite side="left" role={stage.left} reaction={reaction} active={stage.focus === "left"} nodeId={node.id} />}
         {stage?.right && <Sprite side="right" role={stage.right} reaction={reaction} active={stage.focus === "right"} nodeId={node.id} />}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 sm:top-3.5 sm:left-3.5 sm:flex-row">
-          <ScaleChip label="Лояльность" value={run.loyalty} delta={run.last?.loyaltyDelta} />
-          <ScaleChip label="Безопасность" value={run.safety} delta={run.last?.safetyDelta} />
-        </div>
         {urgentNode === node.id && (
           <div aria-hidden className="pointer-events-none absolute inset-0 shadow-[inset_0_0_56px_10px_var(--destructive)] motion-safe:animate-pulse" />
         )}
@@ -117,17 +111,5 @@ function Sprite({ side, role, reaction, active, nodeId }: { side: "left" | "righ
         <Bust look={LOOKS[role.look]} coat={role.coat} emotion={emotion} pale={role.paleWhenPain && emotion === "pain"} />
       </div>
     </div>
-  );
-}
-
-// Шкала на сцене: цвет зоны, значение и изменение после прошлого решения
-function ScaleChip({ label, value, delta }: { label: string; value: number; delta?: number }) {
-  return (
-    <span className="flex w-fit items-center gap-1.5 rounded-full bg-toast px-2.5 py-1 text-[12px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/.2)] backdrop-blur-md sm:text-[13px]">
-      <span className={cn("size-2 rounded-full", ZONE_DOTS[zoneOf(value).tone])} />
-      {label}
-      <span className="font-semibold">{value}</span>
-      {delta ? <span className={cn("font-semibold", delta > 0 ? "text-[#6fe3a0]" : "text-[#ff9d9d]")}>{formatDelta(delta)}</span> : null}
-    </span>
   );
 }

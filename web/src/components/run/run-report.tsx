@@ -10,12 +10,15 @@ import { CarScene } from "./car-scene";
 import { RunReward } from "./reward-card";
 import { ScaleMeter } from "./scale-meter";
 import { ScreenFlash } from "./screen-flash";
+import { useCelebration } from "./use-celebration";
 
 // Исход вспыхивает на экране: хороший — зелёным, плохой — красным, «с замечаниями» — без вспышки
 const OUTCOME_TONES: Record<Outcome, Tone> = { good: "good", ok: "neutral", bad: "bad" };
 
 // Разбор после финала: исход, итоговые шкалы и каждое решение с тем, что и почему повлияло на шкалы
 export function RunReport({ run }: { run: RunView }) {
+  // Отличный исход — конфетти, один раз на прохождение
+  useCelebration(run.id, run.outcome === "good");
   // Итоговые шкалы набегают от нуля, решения появляются по одному — разбор читается сверху вниз
   const loyalty = useCountUp(run.loyalty);
   const safety = useCountUp(run.safety);

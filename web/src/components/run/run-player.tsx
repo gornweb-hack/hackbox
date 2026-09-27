@@ -7,13 +7,13 @@ import { decisionTone } from "@/lib/scales";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { CarScene } from "./car-scene";
 import { ChoiceList } from "./choice-list";
-import { ScaleMeter } from "./scale-meter";
 import { ScreenFlash } from "./screen-flash";
 import { TimerBar } from "./timer-bar";
 import { TypedText } from "./typed-text";
 import { useDecide } from "./use-decide";
 
-// Прохождение: сцена вагона, две шкалы, ситуация, таймер и варианты ответа
+// Прохождение: сцена вагона, ситуация, таймер и варианты ответа. Шкалы во время прохождения не
+// показываем — человек реагирует на ситуацию, а не подбирает ответ по цифрам; итог шкал — в разборе
 export function RunPlayer({ run }: { run: RunView }) {
   const { decide, pending } = useDecide(run);
   const reduced = useReducedMotion();
@@ -57,11 +57,6 @@ export function RunPlayer({ run }: { run: RunView }) {
           onUrgent={() => setUrgentNode(node.id)}
         />
       )}
-
-      <section className="glass relative grid gap-5 rounded-xl p-5 sm:grid-cols-2 sm:gap-8">
-        <ScaleMeter scale="loyalty" value={run.loyalty} delta={run.last?.loyaltyDelta} />
-        <ScaleMeter scale="safety" value={run.safety} delta={run.last?.safetyDelta} />
-      </section>
 
       {run.last?.timedOut && (
         <p className="glass-inner flex items-center gap-2.5 rounded-[20px] px-4 py-3 text-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
