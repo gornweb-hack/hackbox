@@ -1,20 +1,15 @@
 "use client";
 
-import { BookOpenIcon, Gamepad2Icon, HouseIcon, TrophyIcon, UserIcon, type LucideIcon } from "lucide-react";
+import { BookOpenIcon, Gamepad2Icon, HouseIcon, TrophyIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ProfileHeader } from "@/components/profile-header";
+import { TabBar, type NavItem } from "@/components/tab-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMe } from "@/lib/auth";
 import { EventStreamProvider } from "@/lib/events";
 import { cn } from "@/lib/utils";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-}
 
 // Разделы тренажёра. Администрирование — в меню аватара (ProfileHeader)
 const NAV: NavItem[] = [
@@ -25,11 +20,12 @@ const NAV: NavItem[] = [
   { href: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-// Каркас для вошедших: сайдбар на десктопе, нижняя навигация на телефоне,
+// Каркас для вошедших: сайдбар на десктопе, таб-бар «Капля» на телефоне,
 // шапка профиля и одно SSE-подключение на всё приложение
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me, isPending, isError } = useMe();
   const pathname = usePathname();
+  const isActive = useActive();
 
   if (isPending) {
     return (
@@ -53,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex flex-1">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-7 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
+          <main className="flex flex-1 flex-col gap-3 px-4 pt-1 pb-28 lg:gap-5 lg:px-8 lg:pt-7 lg:pb-10">
             <ProfileHeader me={me} />
             {/* Новая страница мягко всплывает: ключ по адресу пересоздаёт блок при переходе */}
             <div
@@ -63,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </main>
-          <BottomNav />
+          <TabBar items={NAV} active={NAV.findIndex(({ href }) => isActive(href))} />
         </div>
       </div>
     </EventStreamProvider>
@@ -108,24 +104,5 @@ function Sidebar() {
         ))}
       </nav>
     </aside>
-  );
-}
-
-function BottomNav() {
-  const isActive = useActive();
-  return (
-    <nav className="sticky bottom-0 z-40 grid grid-cols-5 border-t bg-card px-2 py-1.5 lg:hidden">
-      {NAV.map(({ href, label, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          aria-current={isActive(href) ? "page" : undefined}
-          className="flex h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium text-muted-foreground active:bg-muted aria-[current=page]:font-semibold aria-[current=page]:text-primary-text"
-        >
-          <Icon className="size-[22px]" />
-          {label}
-        </Link>
-      ))}
-    </nav>
   );
 }
