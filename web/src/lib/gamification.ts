@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 
 export interface Level {
-  // Скорость на спидометре, км/ч
+  // Скорость уровня, км/ч — подпись вагона в карточке «Уровень»
   speed: number;
   title: string;
   // Сколько опыта нужно для уровня

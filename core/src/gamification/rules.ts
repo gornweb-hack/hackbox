@@ -3,7 +3,7 @@ import { parse } from 'yaml';
 export type Outcome = 'good' | 'ok' | 'bad';
 
 export interface Level {
-  // Скорость на спидометре, км/ч
+  // Скорость уровня, км/ч — подпись вагона на главной
   speed: number;
   title: string;
   // Сколько опыта нужно для уровня
@@ -38,7 +38,7 @@ export interface Rules {
 }
 
 const OUTCOMES: Outcome[] = ['good', 'ok', 'bad'];
-// Шкала спидометра на главной — до 400 км/ч
+// Скорость уровня — не выше максимальной скорости ВСМ, 400 км/ч
 const MAX_SPEED = 400;
 
 type Fields = Record<string, unknown>;
@@ -60,7 +60,7 @@ export function parseRules(text: string): Rules {
     const at = `уровень №${index + 1}`;
     if (!isObject(item) || typeof item.title !== 'string' || !item.title.trim()) throw new Error(`${at}: нет title`);
     const speed = number(item.speed, `${at}: speed`);
-    if (speed <= 0 || speed > MAX_SPEED) throw new Error(`${at}: скорость — от 1 до ${MAX_SPEED} км/ч, как на спидометре`);
+    if (speed <= 0 || speed > MAX_SPEED) throw new Error(`${at}: скорость — от 1 до ${MAX_SPEED} км/ч, как у ВСМ`);
     return { speed, title: item.title.trim(), xp: number(item.xp, `${at}: xp`) };
   });
   if (levels[0].xp !== 0) throw new Error('у первого уровня порог опыта должен быть 0');
