@@ -1,15 +1,13 @@
-import { AwardIcon, LockIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { AchievementBadge } from "./achievement-badge";
 
 // Плитки ачивок по макету — на главной («Последняя», «Следующая») и на полке в профиле
 
-// Полученная: награда в синем круге, над названием — подпись (например, «Последняя» или дата)
-export function EarnedTile({ label, title, description }: { label: ReactNode; title: string; description: string }) {
+// Полученная: эмблема ачивки, над названием — подпись (например, «Последняя» или дата)
+export function EarnedTile({ id, label, title, description }: { id: string; label: ReactNode; title: string; description: string }) {
   return (
     <div className="glass-inner flex gap-3 rounded-[20px] p-3.5">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary-soft-border bg-primary-soft text-primary-text">
-        <AwardIcon className="size-5" />
-      </span>
+      <AchievementBadge id={id} earned className="size-12" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">{label}</span>
         <span className="text-[15px] font-semibold">{title}</span>
@@ -19,14 +17,16 @@ export function EarnedTile({ label, title, description }: { label: ReactNode; ti
   );
 }
 
-// Закрытая: замок в пунктирном круге и прогресс, если он у ачивки есть
+// Закрытая: серая эмблема с замком и прогресс, если он у ачивки есть
 export function LockedTile({
+  id,
   label,
   title,
   description,
   share,
   text,
 }: {
+  id: string;
   label: string;
   title: string;
   description: string;
@@ -36,9 +36,7 @@ export function LockedTile({
 }) {
   return (
     <div className="flex gap-3 rounded-[20px] border border-dashed border-border-strong p-3.5">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-muted-foreground">
-        <LockIcon className="size-5" />
-      </span>
+      <AchievementBadge id={id} earned={false} className="size-12" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-xs text-muted-foreground">{label}</span>
         <span className="text-[15px] font-semibold">{title}</span>

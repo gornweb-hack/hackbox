@@ -1,6 +1,6 @@
 "use client";
 
-import { StarIcon } from "lucide-react";
+import { AchievementBadge } from "@/components/achievements/achievement-badge";
 import { ApiError } from "@/lib/api";
 import { type Reward, useReward } from "@/lib/gamification";
 import { useCountUp } from "@/lib/use-count-up";
@@ -37,9 +37,7 @@ export function RewardCard({ reward }: { reward: Reward }) {
           style={{ animationDelay: `${900 + index * 250}ms` }}
           className="glass-inner flex items-center gap-4 rounded-[20px] px-4 py-3.5 fill-mode-both motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-90"
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary-soft-border bg-primary-soft text-primary-text">
-            <StarIcon className="size-5" />
-          </span>
+          <AchievementBadge id={achievement.id} earned className="size-12" />
           <span className="flex flex-col gap-0.5">
             <span className="text-[15px] font-semibold">{achievement.title}</span>
             <span className="text-[13px] text-muted-foreground">{achievement.description}</span>

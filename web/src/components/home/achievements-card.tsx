@@ -35,6 +35,7 @@ function AchievementsBody({ achievements }: { achievements: AchievementsSummary 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-3">
         {latest && (
           <EarnedTile
+            id={latest.id}
             label={
               <>
                 Последняя

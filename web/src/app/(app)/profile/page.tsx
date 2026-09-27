@@ -143,6 +143,7 @@ function Shelf() {
           item.earnedAt ? (
             <EarnedTile
               key={item.id}
+              id={item.id}
               label={`Получена ${dayMonth.format(new Date(item.earnedAt))}`}
               title={item.title}
               description={item.description}
