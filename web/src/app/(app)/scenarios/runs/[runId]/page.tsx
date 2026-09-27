@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { BackLink } from "@/components/back-link";
 import { hasNovel } from "@/components/run/novel/cast";
 import { NovelPlayer } from "@/components/run/novel/novel-player";
 import { RunPlayer } from "@/components/run/run-player";
@@ -37,7 +38,18 @@ export default function RunPage() {
     );
   }
 
-  if (run.status === "finished") return <RunReport run={run} />;
-  // Сценарий с постановкой новеллы играется в ней, остальные — в обычном плеере
-  return hasNovel(run.scenarioId) ? <NovelPlayer run={run} /> : <RunPlayer run={run} />;
+  // Выйти можно и посреди прохождения: оно сохранено на сервере и продолжится с того же места
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <BackLink href="/scenarios">Сценарии</BackLink>
+      {run.status === "finished" ? (
+        <RunReport run={run} />
+      ) : hasNovel(run.scenarioId) ? (
+        // Сценарий с постановкой новеллы играется в ней, остальные — в обычном плеере
+        <NovelPlayer run={run} />
+      ) : (
+        <RunPlayer run={run} />
+      )}
+    </div>
+  );
 }

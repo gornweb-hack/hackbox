@@ -4,6 +4,7 @@ import { PlayIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { BackLink } from "@/components/back-link";
 import { CarScene } from "@/components/run/car-scene";
 import { ScenarioTags } from "@/components/scenario-tags";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function ScenarioPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <BackLink href="/scenarios">Сценарии</BackLink>
       <section className="glass-dark relative flex flex-col gap-4 rounded-2xl px-[22px] pt-6 pb-[22px]">
         <span className="text-[13px] font-medium text-[#93b2ff]">{scenario.category.title}</span>
         <div className="flex flex-col gap-2">

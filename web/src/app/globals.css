@@ -360,40 +360,30 @@
   }
 }
 
-/* Показ новой ачивки и нового уровня (components/celebrate/unlock-overlay.tsx): жетон делает оборот,
-   как монета, по нему пробегает блик, вокруг мерцают искры и медленно вращается сияние */
+/* Показ новой ачивки и нового уровня (components/celebrate/unlock-overlay.tsx): жетон делает один
+   плавный оборот, как монета, вокруг мерцают искры и медленно вращается сияние */
 @theme {
-  --animate-unlock-spin: unlock-spin 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  --animate-unlock-float: unlock-float 2.6s ease-in-out 1.4s infinite alternate;
-  --animate-unlock-shine: unlock-shine 2.4s ease-in-out 1s infinite;
+  --animate-unlock-spin: unlock-spin 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-unlock-float: unlock-float 3s ease-in-out 1.2s infinite alternate;
   --animate-unlock-rays: unlock-rays 12s linear infinite;
   --animate-unlock-twinkle: unlock-twinkle 1.6s ease-in-out infinite;
 
   @keyframes unlock-spin {
     from {
-      transform: perspective(600px) rotateY(-720deg) scale(0.3);
+      transform: perspective(800px) rotateY(-360deg) scale(0.6);
       opacity: 0;
     }
-    60% {
+    35% {
       opacity: 1;
     }
     to {
-      transform: perspective(600px) rotateY(0) scale(1);
+      transform: perspective(800px) rotateY(0) scale(1);
       opacity: 1;
     }
   }
   @keyframes unlock-float {
     to {
-      transform: translateY(-8px);
-    }
-  }
-  @keyframes unlock-shine {
-    from {
-      transform: translateX(-160%) skewX(-20deg);
-    }
-    45%,
-    to {
-      transform: translateX(160%) skewX(-20deg);
+      transform: translateY(-5px);
     }
   }
   @keyframes unlock-rays {

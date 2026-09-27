@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import type { Level } from "@/lib/gamification";
 import type { Unlock } from "@/lib/unlocks";
 
-// Праздник по центру экрана: новый уровень и новые ачивки по очереди. Жетон делает оборот, как монета,
-// по нему пробегает блик, вокруг мерцают искры и вращается сияние (анимации unlock-* в globals.css).
+// Праздник по центру экрана: новый уровень и новые ачивки по очереди. Жетон делает один плавный оборот,
+// как монета, вокруг мерцают искры и вращается сияние (анимации unlock-* в globals.css).
 // Рисуется в body через портал: у стеклянных карточек backdrop-filter, и fixed внутри них не на весь экран
 export function UnlockOverlay({ unlocks, onDone }: { unlocks: Unlock[]; onDone: () => void }) {
   const [index, setIndex] = useState(0);
@@ -36,22 +36,17 @@ export function UnlockOverlay({ unlocks, onDone }: { unlocks: Unlock[]; onDone: 
       aria-modal="true"
       aria-label={`${text.eyebrow}: ${text.title}`}
       onClick={next}
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0b0c10]/75 p-6 backdrop-blur-sm duration-300 motion-safe:animate-in motion-safe:fade-in"
+      // Без backdrop-blur: размытие всего экрана пересчитывается на каждом кадре и даёт рывки анимации
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0b0c10]/85 p-6 duration-300 motion-safe:animate-in motion-safe:fade-in"
     >
       <div key={index} onClick={(event) => event.stopPropagation()} className="flex max-w-sm flex-col items-center gap-5 text-center">
         <div className="relative flex size-64 items-center justify-center">
           <Rays />
           <Sparkles />
-          <div className="relative size-40 motion-safe:animate-unlock-spin">
-            <div className="motion-safe:animate-unlock-float">
-              <div className="relative overflow-hidden rounded-full">
-                {unlock.kind === "level" ? <LevelToken level={unlock.level} /> : <AchievementBadge id={unlock.achievement.id} earned className="size-40" />}
-                {/* Блик пробегает по жетону */}
-                <span
-                  aria-hidden
-                  className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent motion-safe:animate-unlock-shine"
-                />
-              </div>
+          {/* will-change заранее выносит жетон в отдельный слой: оборот идёт без перерисовки страницы */}
+          <div className="relative size-40 will-change-transform motion-safe:animate-unlock-spin">
+            <div className="will-change-transform motion-safe:animate-unlock-float">
+              {unlock.kind === "level" ? <LevelToken level={unlock.level} /> : <AchievementBadge id={unlock.achievement.id} earned className="size-40" />}
             </div>
           </div>
         </div>
@@ -80,7 +75,7 @@ function Rays() {
     maskImage: "radial-gradient(circle, black 25%, transparent 68%)",
     WebkitMaskImage: "radial-gradient(circle, black 25%, transparent 68%)",
   };
-  return <div aria-hidden className="absolute inset-0 rounded-full motion-safe:animate-unlock-rays" style={style} />;
+  return <div aria-hidden className="absolute inset-0 rounded-full will-change-transform motion-safe:animate-unlock-rays" style={style} />;
 }
 
 // Искры вокруг жетона мерцают вразнобой
